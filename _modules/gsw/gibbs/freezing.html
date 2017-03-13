@@ -1,0 +1,609 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.freezing &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.freezing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">SSO</span>
+<span class="kn">from</span> <span class="nn">.conversions</span> <span class="k">import</span> <span class="n">t_from_CT</span><span class="p">,</span> <span class="n">CT_from_t</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;brineSA_CT&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;brineSA_t&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CT_freezing&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;t_freezing&#39;</span><span class="p">]</span>
+
+<span class="c1"># Constants:</span>
+<span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.017947064327968736</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.076099099929818</span><span class="p">,</span> <span class="mf">4.883198653547851</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">11.88081601230542</span><span class="p">,</span> <span class="mf">13.34658511480257</span><span class="p">,</span> <span class="o">-</span><span class="mf">8.722761043208607</span><span class="p">,</span>
+     <span class="mf">2.082038908808201</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.389420998107497</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.110913185058476</span><span class="p">,</span>
+     <span class="mf">0.2295491578006229</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9891538123307282</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.08987150128406496</span><span class="p">,</span>
+     <span class="mf">0.3831132432071728</span><span class="p">,</span> <span class="mf">1.054318231187074</span><span class="p">,</span> <span class="mf">1.065556599652796</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">0.7997496801694032</span><span class="p">,</span> <span class="mf">0.3850133554097069</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.078616693017569</span><span class="p">,</span>
+     <span class="mf">0.8756340772729538</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.079022768390933</span><span class="p">,</span> <span class="mf">1.596435439942262</span><span class="p">,</span>
+     <span class="mf">0.1338002171109174</span><span class="p">,</span> <span class="mf">1.242891021876471</span><span class="p">)</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.002519</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.946302841607319</span><span class="p">,</span> <span class="mf">4.136051661346983</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">1.115150523403847e1</span><span class="p">,</span> <span class="mf">1.476878746184548e1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.088873263630961e1</span><span class="p">,</span>
+     <span class="mf">2.961018839640730</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.433320943962606</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.561578562479883</span><span class="p">,</span>
+     <span class="mf">4.073774363480365e-2</span><span class="p">,</span> <span class="mf">1.158414435887717e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.122639292422863e-1</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">1.123186915628260e-1</span><span class="p">,</span> <span class="mf">5.715012685553502e-1</span><span class="p">,</span> <span class="mf">2.021682115652684e-1</span><span class="p">,</span>
+     <span class="mf">4.140574258089767e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.034228641903586e-1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.205825928146808e-2</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">2.812172968619369e-1</span><span class="p">,</span> <span class="mf">1.877244474023750e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.204395563789007e-1</span><span class="p">,</span>
+     <span class="mf">2.349147739749606e-1</span><span class="p">,</span> <span class="mf">2.748444541144219e-3</span><span class="p">)</span>
+
+<span class="c1"># Adjust for the effects of dissolved air.  Note that</span>
+<span class="c1"># a = 0.502500117621 / 35.16504</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">0.014289763856964</span><span class="p">,</span> <span class="mf">0.057000649899720</span>
+
+<span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.570124672768757e-1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.917742353032266e+1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.413382858617969e-2</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">5.427484830917552e-1</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.126621135193472e-4</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.176407833276121e-7</span><span class="p">,</span>
+     <span class="mf">4.688217641883641e-5</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.039808885885726e-8</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.990118091261456e-11</span><span class="p">,</span>
+     <span class="o">-</span><span class="mf">9.733920711119464e-9</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.723324202726337e-12</span><span class="p">,</span> <span class="mf">7.121854166249257e-16</span><span class="p">,</span>
+     <span class="mf">1.256474634100811e-12</span><span class="p">,</span> <span class="mf">2.105103897918125e-15</span><span class="p">,</span> <span class="mf">8.663811778227171e-19</span><span class="p">)</span>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="brineSA_CT"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.freezing.brineSA_CT">[docs]</a><span class="k">def</span> <span class="nf">brineSA_CT</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Absolute Salinity of seawater at the freezing</span>
+<span class="sd">    temperature.  That is, the output is the Absolute Salinity of seawater,</span>
+<span class="sd">    with the fraction saturation_fraction of dissolved air, that is in</span>
+<span class="sd">    equilibrium with ice at Conservative Temperature CT and pressure p.  If the</span>
+<span class="sd">    input values are such that there is no positive value of Absolute Salinity</span>
+<span class="sd">    for which seawater is frozen, the output, brineSA_CT, is put equal to -99.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+<span class="sd">    saturation_fraction : fraction between 0, 1.  The saturation fraction of</span>
+<span class="sd">                          dissolved air in seawater.  Default is 0 or</span>
+<span class="sd">                          completely saturated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    brine_SA_CT : array_like</span>
+<span class="sd">                 Absolute Salinity of seawater when it freezes [ g/kg ]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See sections 3.33.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span>
+                                                     <span class="n">saturation_fraction</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">saturation_fraction</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Saturation_fraction MUST be between zero and one.&#39;</span><span class="p">)</span>
+
+    <span class="n">p_r</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="mf">1e-4</span>
+    <span class="c1"># Form the first estimate of brine_SA_CT from a polynomial in CT and p_r.</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">CT</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.06</span>  <span class="c1"># A rough estimate to get the saturated CT.</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">CTsat</span> <span class="o">=</span> <span class="p">(</span><span class="n">CT</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">saturation_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.4</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">SA</span><span class="p">)</span> <span class="o">*</span>
+             <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">)))</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">*</span>
+          <span class="n">CTsat</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span>
+          <span class="n">P</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">))))</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span>
+          <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">)))</span>
+
+    <span class="n">CT_freezing_zero_SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">))</span> <span class="o">-</span>
+                           <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="mf">2.4e-3</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span><span class="p">))</span>
+
+    <span class="c1"># Find CT &gt; CT_freezing_zero_SA.  If this is the case, the input values</span>
+    <span class="c1"># represent seawater that is not frozen (at any positive SA).</span>
+    <span class="n">Itw</span> <span class="o">=</span> <span class="p">(</span><span class="n">CT</span> <span class="o">&gt;</span> <span class="n">CT_freezing_zero_SA</span><span class="p">)</span>  <span class="c1"># tw stands for &quot;too warm&quot;</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">Itw</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="c1"># Find -SA_cut_off &lt; SA &lt; SA_cut_off, replace the above estimate of SA</span>
+    <span class="c1"># with one based on (CT_freezing_zero_SA - CT).</span>
+    <span class="n">SA_cut_off</span> <span class="o">=</span> <span class="mf">2.5</span>  <span class="c1"># This is the band of SA within +- 2.5 g/kg of SA = 0,</span>
+                      <span class="c1"># which we treat differently in calculating the initial</span>
+                      <span class="c1"># values of both SA and dCT_dSA.</span>
+
+    <span class="n">Ico</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">SA</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">SA_cut_off</span><span class="p">)</span>
+    <span class="n">Icoa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">SA_cut_off</span><span class="p">)</span>
+
+    <span class="n">SA</span><span class="p">[</span><span class="n">Icoa</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Find SA &lt; -SA_cut_off, set them to NaN.</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">SA_cut_off</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="c1"># Form the first estimate of dCT_dSA, the derivative of CT with respect</span>
+    <span class="c1"># to SA at fixed p.</span>
+    <span class="n">SA_r</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">SA</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">SA_r</span><span class="p">)</span>
+
+    <span class="n">dCT_dSA_part</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">))))</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span>
+                    <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span>
+                    <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span>
+                    <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span>
+                    <span class="n">c</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">))))</span>
+
+    <span class="n">dCT_dSA</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">dCT_dSA_part</span> <span class="o">-</span> <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">*</span>
+              <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">))</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.4</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">SA</span><span class="p">)</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">)</span>
+
+    <span class="c1"># Now replace the estimate of SA with the one based on</span>
+    <span class="c1"># (CT_freezing_zero_SA - CT) when (np.abs(SA) &lt; SA_cut_off).</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">Ico</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">CT</span><span class="p">[</span><span class="n">Ico</span><span class="p">]</span> <span class="o">-</span> <span class="n">CT_freezing_zero_SA</span><span class="p">[</span><span class="n">Ico</span><span class="p">])</span> <span class="o">/</span> <span class="n">dCT_dSA</span><span class="p">[</span><span class="n">Ico</span><span class="p">]</span>
+
+    <span class="c1"># Begin the modified Newton-Raphson method to solve the root of</span>
+    <span class="c1"># CT_freezing = CT for SA.</span>
+    <span class="n">Number_of_Iterations</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">I_iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Number_of_Iterations</span><span class="p">):</span>
+        <span class="c1"># CT_freezing temperature function evaluation (the forward function</span>
+        <span class="c1"># evaluation), the same as CT_freezing(SA, p, saturation_fraction).</span>
+
+        <span class="n">SA_r</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">SA</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">SA_r</span><span class="p">)</span>
+        <span class="n">SA_old</span> <span class="o">=</span> <span class="n">SA</span>
+        <span class="n">CT_freeze</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">SA_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span>
+                     <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))))</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span>
+                     <span class="n">c</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">))</span> <span class="o">+</span> <span class="n">SA_r</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span>
+                     <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span> <span class="o">*</span> <span class="n">SA_r</span><span class="p">))</span> <span class="o">+</span> <span class="n">SA_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span>
+                     <span class="n">c</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">*</span> <span class="n">SA_r</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">+</span>
+                     <span class="n">SA_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span> <span class="o">*</span> <span class="n">SA_r</span><span class="p">)))</span> <span class="o">-</span>
+                     <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.4</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">SA</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span>
+                     <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">)))</span>
+
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">SA_old</span> <span class="o">-</span> <span class="p">(</span><span class="n">CT_freeze</span> <span class="o">-</span> <span class="n">CT</span><span class="p">)</span> <span class="o">/</span> <span class="n">dCT_dSA</span>
+
+        <span class="c1"># Half-way point of the modified Newton-Raphson solution method.</span>
+        <span class="n">SA_r</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="p">(</span><span class="n">SA</span> <span class="o">+</span> <span class="n">SA_old</span><span class="p">)</span>  <span class="c1"># The mean value of SA and SA_old.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">SA_r</span><span class="p">)</span>
+
+        <span class="n">dCT_dSA_part</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span>
+                       <span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">))))</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span>
+                       <span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span>
+                       <span class="n">c</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">*</span>
+                       <span class="n">p_r</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">*</span>
+                       <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span>
+                       <span class="n">p_r</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+        <span class="n">dCT_dSA</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">dCT_dSA_part</span> <span class="o">-</span> <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">*</span>
+                  <span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">))</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.4</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">SA</span><span class="p">)</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">))</span>
+
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">SA_old</span> <span class="o">-</span> <span class="p">(</span><span class="n">CT_freeze</span> <span class="o">-</span> <span class="n">CT</span><span class="p">)</span> <span class="o">/</span> <span class="n">dCT_dSA</span>
+
+    <span class="c1"># The following lines of code, if implemented, calculates the error of</span>
+    <span class="c1"># this function in terms of Conservative Temperature, CT_error.  With</span>
+    <span class="c1"># Number_of_Iterations = 1, the maximum error in CT is 2x10^-7 C.  With</span>
+    <span class="c1"># Number_of_Iterations = 2, the maximum error in CT is 7x10^-15 C, which is</span>
+    <span class="c1"># the machine precision of the computer.  Number_of_Iterations = 2 is what</span>
+    <span class="c1"># we recommend.</span>
+    <span class="c1">#</span>
+    <span class="c1"># SA_r = 0.01 * SA</span>
+    <span class="c1"># x = np.sqrt(SA_r)</span>
+    <span class="c1"># CT_freeze = c[0] + SA_r * (c[1] + x * (c[2] + x * (c[3] + x * (c[4] + x *</span>
+    <span class="c1">#             (c[5] + c[6] * x))))) + p_r * (c[7] + p_r * (c[8] + c[9] *</span>
+    <span class="c1">#             p_r)) + SA_r * p_r * (c[10] + p_r * (c[12] + p_r * (c[15] +</span>
+    <span class="c1">#             c[21] * SA_r)) + SA_r * (c[13] + c[17] * p_r + c[19] * SA_r)</span>
+    <span class="c1">#             + x * (c[11] + p_r * (c[14] + c[18] * p_r) + SA_r * (c[16] +</span>
+    <span class="c1">#             c[20] * p_r + c[22] * SA_r))) - saturation_fraction * 1e-3 *</span>
+    <span class="c1">#             (2.4 - a * SA) * (1 + b * (1 - SA / SSO))</span>
+    <span class="c1">#</span>
+    <span class="c1"># CT_error = np.abs(CT_freeze - CT)</span>
+    <span class="c1">#</span>
+    <span class="c1"># tmp = np.logical_or(p &gt; 10000, SA &gt; 120</span>
+    <span class="c1"># out = np.logical_and(tmp, p + SA * 71.428571428571402 &gt; 13571.42857142857)</span>
+    <span class="c1"># CT_error[out] = np.ma.masked</span>
+
+    <span class="n">brine_SA_CT</span> <span class="o">=</span> <span class="n">SA</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">71.428571428571402</span> <span class="o">&gt;</span> <span class="mf">13571.42857142857</span><span class="p">)</span>
+
+    <span class="n">brine_SA_CT</span><span class="p">[</span><span class="n">out</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="c1"># If the CT input is too warm, then there is no (positive) value of SA</span>
+    <span class="c1"># that represents frozen seawater.</span>
+    <span class="n">brine_SA_CT</span><span class="p">[</span><span class="n">Itw</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">99</span>  <span class="c1"># NOTE: Mask these?</span>
+
+    <span class="k">return</span> <span class="n">brine_SA_CT</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="brineSA_t"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.freezing.brineSA_t">[docs]</a><span class="k">def</span> <span class="nf">brineSA_t</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Absolute Salinity of seawater at the freezing temperature.</span>
+<span class="sd">    That is, the output is the Absolute Salinity of seawater, with the fraction</span>
+<span class="sd">    saturation_fraction of dissolved air, that is in equilibrium with ice at</span>
+<span class="sd">    in-situ temperature t and pressure p.  If the input values are such that</span>
+<span class="sd">    there is no positive value of Absolute Salinity for which seawater is</span>
+<span class="sd">    frozen, the output, brineSA_t, is put equal to -99.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    t : array_like</span>
+<span class="sd">        in situ temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+<span class="sd">    saturation_fraction : fraction between 0, 1.  The saturation fraction of</span>
+<span class="sd">                          dissolved air in seawater.  Default is 0 or</span>
+<span class="sd">                          completely saturated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    brine_SA_t : array_like</span>
+<span class="sd">                 Absolute Salinity of seawater when it freezes [ g/kg ]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See sections 3.33.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">saturation_fraction</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Saturation_fraction MUST be between zero and one.&#39;</span><span class="p">)</span>
+
+    <span class="n">p_r</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="mf">1e-4</span>
+
+    <span class="c1"># Form the first estimate of brine_SA_t, called SA here, from a polynomial</span>
+    <span class="c1"># in CT and p_r.</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.06</span>  <span class="c1"># A rough estimate to get the saturated CT.</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">CTsat</span> <span class="o">=</span> <span class="n">CT</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">saturation_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.4</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">SA</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span>
+            <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">))</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span>
+         <span class="n">P</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span>
+         <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">*</span> <span class="n">CTsat</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">))))</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">CTsat</span> <span class="o">*</span>
+         <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">))</span>
+
+    <span class="n">t_freezing_zero_SA</span> <span class="o">=</span> <span class="n">t_freezing</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="p">)</span>
+
+    <span class="c1"># Find t &gt; t_freezing_zero_SA.  If this is the case, the input values</span>
+    <span class="c1"># represent seawater that is not frozen (at any positive SA).</span>
+    <span class="n">Itw</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&gt;</span> <span class="n">t_freezing_zero_SA</span><span class="p">)</span>  <span class="c1"># Itw stands for &quot;I_too_warm&quot;</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">Itw</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="c1"># Find -SA_cut_off &lt; SA &lt; SA_cut_off, replace the above estimate of SA</span>
+    <span class="c1"># with one based on (t_freezing_zero_SA - t).</span>
+    <span class="n">SA_cut_off</span> <span class="o">=</span> <span class="mf">2.5</span>  <span class="c1"># This is the band of SA within +- 2.5 g/kg of SA = 0,</span>
+                      <span class="c1"># which we treat differently in calculating the initial</span>
+                      <span class="c1"># values of both SA and dCT_dSA.</span>
+
+    <span class="n">Ico</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">SA</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">SA_cut_off</span><span class="p">)</span>
+    <span class="n">Icoa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">SA_cut_off</span><span class="p">)</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">Icoa</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Find SA &lt; -SA_cut_off, set them to masked.</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">SA_cut_off</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="c1"># Form the first estimate of dt_dSA, the derivative of t with respect</span>
+    <span class="c1"># to SA at fixed p, using the coefficients, t0 ... t22 from t_freezing.</span>
+    <span class="n">SA_r</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">SA</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">SA_r</span><span class="p">)</span>
+    <span class="n">dt_dSA_part</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span>
+    <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">))))</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span>
+    <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">*</span>
+    <span class="n">p_r</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">*</span>
+    <span class="n">p_r</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+    <span class="n">dt_dSA</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">dt_dSA_part</span> <span class="o">+</span> <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">/</span> <span class="mf">70.33008</span>
+
+    <span class="c1"># Now replace the estimate of SA with the one based on</span>
+    <span class="c1"># (t_freezing_zero_SA - t) when (abs(SA) &lt; SA_cut_off).</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">Ico</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">Ico</span><span class="p">]</span> <span class="o">-</span> <span class="n">t_freezing_zero_SA</span><span class="p">[</span><span class="n">Ico</span><span class="p">])</span> <span class="o">/</span> <span class="n">dt_dSA</span><span class="p">[</span><span class="n">Ico</span><span class="p">]</span>
+
+    <span class="c1"># Begin the modified Newton-Raphson method to find the root of</span>
+    <span class="c1"># t_freeze = t for SA.</span>
+    <span class="n">Number_of_Iterations</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">for</span> <span class="n">I_iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Number_of_Iterations</span><span class="p">):</span>
+        <span class="n">SA_old</span> <span class="o">=</span> <span class="n">SA</span>
+        <span class="n">t_freeze</span> <span class="o">=</span> <span class="n">t_freezing</span><span class="p">(</span><span class="n">SA_old</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="p">)</span>
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">SA_old</span> <span class="o">-</span> <span class="p">(</span><span class="n">t_freeze</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt_dSA</span>
+        <span class="c1"># Half-way point of the modified Newton-Raphson solution method.</span>
+        <span class="n">SA_r</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="p">(</span><span class="n">SA</span> <span class="o">+</span> <span class="n">SA_old</span><span class="p">)</span>  <span class="c1"># Mean value of SA and SA_old.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">SA_r</span><span class="p">)</span>
+        <span class="n">dt_dSA_part</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span>
+                       <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">))))</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span>
+                       <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span>
+                       <span class="n">T</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span>
+                       <span class="mi">6</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">+</span>
+                       <span class="n">T</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span>
+                       <span class="mi">7</span> <span class="o">*</span> <span class="n">T</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">))))</span>
+
+        <span class="n">dt_dSA</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">dt_dSA_part</span> <span class="o">+</span> <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">/</span>
+                  <span class="mf">70.33008</span><span class="p">)</span>
+
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">SA_old</span> <span class="o">-</span> <span class="p">(</span><span class="n">t_freeze</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt_dSA</span>
+
+    <span class="c1"># The following lines of code, if implemented, calculate the error of this</span>
+    <span class="c1"># function in terms of in-situ temperature.  With Number_of_Iterations = 4,</span>
+    <span class="c1"># the max error in t is 3x10^-13 C.  With Number_of_Iterations = 5, the max</span>
+    <span class="c1"># error in t is 2x10^-14 C, which is the machine precision of the computer.</span>
+    <span class="c1"># Number_of_Iterations = 5 is what we recommend.</span>
+    <span class="c1">#</span>
+    <span class="c1"># SA[SA &lt; 0] = np.ma.masked</span>
+    <span class="c1">#</span>
+    <span class="c1"># t_freeze = t_freezing(SA, p, saturation_fraction)</span>
+    <span class="c1"># t_error = np.abs(t_freeze - t)</span>
+    <span class="c1"># tmp = np.logical_or(p &gt; 10000, SA &gt; 120)</span>
+    <span class="c1"># out = np.logical_and(tmp, p + SA * 71.428571428571402 &gt; 13571.42857142857)</span>
+    <span class="c1"># t_error[out] = np.ma.masked</span>
+
+    <span class="n">brine_SA_t</span> <span class="o">=</span> <span class="n">SA</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">71.428571428571402</span> <span class="o">&gt;</span> <span class="mf">13571.42857142857</span><span class="p">)</span>
+    <span class="n">brine_SA_t</span><span class="p">[</span><span class="n">out</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="n">brine_SA_t</span><span class="p">[</span><span class="n">Itw</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">99</span>  <span class="c1"># If the t input is too warm, then there is no</span>
+                           <span class="c1"># (positive) value of SA that represents frozen</span>
+                           <span class="c1"># seawater.</span>
+
+    <span class="k">return</span> <span class="n">brine_SA_t</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="CT_freezing"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.freezing.CT_freezing">[docs]</a><span class="k">def</span> <span class="nf">CT_freezing</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Conservative Temperature at which seawater freezes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+<span class="sd">    saturation_fraction : fraction between 0, 1.  The saturation fraction of</span>
+<span class="sd">                          dissolved air in seawater.  Default is 0 or</span>
+<span class="sd">                          completely saturated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT_freezing : array_like</span>
+<span class="sd">          Conservative Temperature at freezing of</span>
+<span class="sd">          seawater [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See sections 3.33 and 3.34.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span>
+                                                     <span class="n">saturation_fraction</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;SA must be non-negative!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">saturation_fraction</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Saturation_fraction MUST be between zero and one.&#39;</span><span class="p">)</span>
+
+    <span class="n">SA_r</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">1e-2</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">SA_r</span><span class="p">)</span>
+    <span class="n">p_r</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="mf">1e-4</span>
+
+    <span class="n">CT_freeze</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">SA_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span>
+                 <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))))</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span>
+                 <span class="n">c</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">))</span> <span class="o">+</span> <span class="n">SA_r</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span>
+                 <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span> <span class="o">*</span> <span class="n">SA_r</span><span class="p">))</span> <span class="o">+</span> <span class="n">SA_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span>
+                 <span class="n">c</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">*</span> <span class="n">SA_r</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">+</span> <span class="n">p_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span><span class="p">)</span> <span class="o">+</span>
+                 <span class="n">SA_r</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span> <span class="n">p_r</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span> <span class="o">*</span> <span class="n">SA_r</span><span class="p">))))</span>
+
+    <span class="c1"># The error of this fit ranges between -5e-4 K and 6e-4 K when compared</span>
+    <span class="c1"># with the Conservative Temperature calculated from the exact in-situ</span>
+    <span class="c1"># freezing temperature which is found by a Newton-Raphson iteration of the</span>
+    <span class="c1"># equality of the chemical potentials of water in seawater and in ice.</span>
+    <span class="c1"># (Note that the in-situ freezing temperature can be found by this exact</span>
+    <span class="c1"># method using the function sea_ice_freezingtemperature_si in the SIA</span>
+    <span class="c1"># library).</span>
+
+    <span class="c1"># Adjust for the effects of dissolved air.</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">0.014289763856964</span><span class="p">,</span> <span class="mf">0.057000649899720</span>
+    <span class="c1"># Note that a = 0.502500117621 / 35.16504</span>
+
+    <span class="n">CT_freeze</span> <span class="o">=</span> <span class="p">(</span><span class="n">CT_freeze</span> <span class="o">-</span> <span class="n">saturation_fraction</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1e-3</span><span class="p">)</span> <span class="o">*</span>
+                 <span class="p">(</span><span class="mf">2.4</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">SA</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="mf">35.16504</span><span class="p">)))</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">71.428571428571402</span> <span class="o">&gt;</span> <span class="mf">13571.42857142857</span><span class="p">)</span>
+
+    <span class="n">CT_freeze</span><span class="p">[</span><span class="n">out</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="k">return</span> <span class="n">CT_freeze</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="t_freezing"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.freezing.t_freezing">[docs]</a><span class="k">def</span> <span class="nf">t_freezing</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the in-situ temperature at which seawater freezes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+<span class="sd">    saturation_fraction : fraction between 0, 1.  The saturation fraction of</span>
+<span class="sd">                          dissolved air in seawater.  Default is 0 or</span>
+<span class="sd">                          completely saturated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t_freezing : array_like</span>
+<span class="sd">                  in-situ temperature at which seawater freezes</span>
+<span class="sd">                  [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See sections 3.33 and 3.34.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># This function, t_freezing, calculates the in-situ freezing temperature,</span>
+    <span class="c1"># t_freezing, of seawater by first evaluating a polynomial of the</span>
+    <span class="c1">#  Conservative Temperature at which seawater freezes, CT_freezing, using</span>
+    <span class="c1"># the GSW function CT_freezing.  The in-situ freezing temperature is then</span>
+    <span class="c1"># calculated using the GSW function t_from_CT.  However, if one wanted to</span>
+    <span class="c1"># compute the in-situ freezing temperature directly from a single polynomial</span>
+    <span class="c1"># expression without first calculating the Conservative Temperature at the</span>
+    <span class="c1"># freezing point, the following lines of code achieve this.  The error of the</span>
+    <span class="c1"># following fit is similar to that of the present function, t_freezing, and</span>
+    <span class="c1"># ranges between -8e-4 K and 3e-4 K when compared with the in-situ freezing</span>
+    <span class="c1"># temperature evaluated by Newton-Raphson iteration of the equality of the</span>
+    <span class="c1"># chemical potentials of water in seawater and in ice.  (Note that the</span>
+    <span class="c1"># in-situ freezing temperature can be found by this exact method using the</span>
+    <span class="c1"># function sea_ice_freezingtemperature_si in the SIA library).</span>
+    <span class="c1">#</span>
+    <span class="c1"># SA_r = SA * 1e-2</span>
+    <span class="c1"># x = np.sqrt(SA_r)</span>
+    <span class="c1"># p_r = p * 1e-4</span>
+    <span class="c1">#</span>
+    <span class="c1"># t_freeze = T[0] + SA_r * (T[1] + x * (T[2] + x * (T[3] + x * (T[4] + x *</span>
+    <span class="c1">#            (T[5] + T[6] * x))))) + p_r * (T[7] + p_r * (T[8] + T[9] *</span>
+    <span class="c1">#            p_r)) + SA_r * p_r * (T[10] + p_r * (T[12] + p_r * (T[15] +</span>
+    <span class="c1">#            T[21] * SA_r)) + SA_r * (T[13] + T[17] * p_r + T[19] * SA_r) +</span>
+    <span class="c1">#            x * (T[11] + p_r * (T[14] + T[18] * p_r)  + SA_r * (T[16] +</span>
+    <span class="c1">#            T[20] * p_r + T[22] * SA_r)))</span>
+    <span class="c1">#</span>
+    <span class="c1"># Adjust for the effects of dissolved air</span>
+    <span class="c1"># t_freezing -= saturation_fraction * (1e-3) * (2.4 - SA / 70.33008)</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span>
+                                                     <span class="n">saturation_fraction</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;SA must be non-negative!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">saturation_fraction</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">saturation_fraction</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Saturation_fraction MUST be between zero and one.&#39;</span><span class="p">)</span>
+
+    <span class="n">CT_freeze</span> <span class="o">=</span> <span class="n">CT_freezing</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">saturation_fraction</span><span class="p">)</span>
+
+    <span class="n">t_freeze</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT_freeze</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">71.428571428571402</span> <span class="o">&gt;</span> <span class="mf">13571.42857142857</span><span class="p">)</span>
+
+    <span class="n">t_freeze</span><span class="p">[</span><span class="n">out</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="k">return</span> <span class="n">t_freeze</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

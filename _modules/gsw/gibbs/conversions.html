@@ -1,0 +1,1633 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.conversions &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.conversions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span><span class="p">,</span> <span class="n">strip_mask</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">SSO</span><span class="p">,</span> <span class="n">cp0</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">Kelvin</span><span class="p">,</span> <span class="n">sfac</span><span class="p">,</span> <span class="n">uPS</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">db2Pascal</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">P0</span><span class="p">,</span> <span class="n">M_S</span><span class="p">,</span> <span class="n">valence_factor</span>
+<span class="kn">from</span> <span class="nn">.library</span> <span class="k">import</span> <span class="p">(</span><span class="n">entropy_part</span><span class="p">,</span> <span class="n">entropy_part_zerop</span><span class="p">,</span> <span class="n">gibbs</span><span class="p">,</span> <span class="n">gibbs_pt0_pt0</span><span class="p">,</span>
+                      <span class="n">enthalpy_SSO_0_p</span><span class="p">,</span> <span class="n">specvol_SSO_0_p</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.library</span> <span class="k">import</span> <span class="n">SA_from_SP_Baltic</span><span class="p">,</span> <span class="n">SP_from_SA_Baltic</span><span class="p">,</span> <span class="n">SAAR</span>
+
+<span class="c1"># This first set is moved over from absolute_salinity_sstar_ct,</span>
+<span class="c1"># which is being absorbed into this module.</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CT_from_t&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SA_from_SP&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Sstar_from_SP&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Abs_Pressure_from_p&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CT_from_entropy&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CT_from_pt&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SA_Sstar_from_SP&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SA_from_Sstar&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SP_from_SA&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SP_from_SR&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SP_from_Sstar&#39;</span><span class="p">,</span>  <span class="c1"># TODO</span>
+           <span class="s1">&#39;SR_from_SP&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Sstar_from_SA&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;deltaSA_from_SP&#39;</span><span class="p">,</span>  <span class="c1"># TODO</span>
+           <span class="s1">&#39;depth_from_z&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;entropy_from_CT&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;entropy_from_pt&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;entropy_from_t&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;ionic_strength_from_SA&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;molality_from_SA&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;p_from_Abs_Pressure&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;p_from_z&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pot_enthalpy_from_pt&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pt0_from_t&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pt_from_CT&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pt_from_entropy&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pt_from_t&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;t90_from_t48&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;t90_from_t68&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;t_from_CT&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;t_from_entropy&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;z_from_depth&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;z_from_p&#39;</span><span class="p">]</span>  <span class="c1"># TODO: Test with geo_strf_dyn_height != None</span>
+
+<span class="n">DEG2RAD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span>
+<span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>  <span class="c1"># constants used as arguments to gibbs()</span>
+
+
+<span class="k">def</span> <span class="nf">check_input</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check for out of range values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Helper for the &quot;from_SP&quot; functions.</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">SP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">SP</span><span class="p">)</span>
+
+    <span class="n">cond1</span> <span class="o">=</span> <span class="p">((</span><span class="n">p</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">SP</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">))</span>
+    <span class="n">cond2</span> <span class="o">=</span> <span class="p">((</span><span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">SP</span> <span class="o">&gt;</span> <span class="mi">42</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">cond1</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">cond2</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>  <span class="c1"># don&#39;t modify input array</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">cond1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">cond2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">SP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">lon</span> <span class="o">%</span> <span class="mi">360</span>
+
+    <span class="c1"># FIXME: If we do keep the checks below, they need to</span>
+    <span class="c1"># be reformulated with ValueError(&#39;pressure out of range&#39;) etc.</span>
+    <span class="c1"># The original also checks for 9999s--a fossil from old-time</span>
+    <span class="c1"># Fortran days.</span>
+
+    <span class="c1"># I don&#39;t think we need these here; if any such checking is</span>
+    <span class="c1"># needed, it should not just be for the &quot;from_SP&quot; functions.</span>
+    <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">p</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">12000</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Sstar_from_SP: pressure is out of range&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">lon</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">lon</span> <span class="o">&gt;</span> <span class="mi">360</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Sstar_from_SP: longitude is out of range&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Sstar_from_SP: latitude is out of range&#39;</span><span class="p">)</span>
+
+    <span class="n">SP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Works on masked array also.</span>
+
+    <span class="k">return</span> <span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="Abs_Pressure_from_p"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.Abs_Pressure_from_p">[docs]</a><span class="k">def</span> <span class="nf">Abs_Pressure_from_p</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Absolute Pressure from sea pressure.  Note that Absolute</span>
+<span class="sd">    Pressure is in Pa NOT dbar.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Absolute_Pressure : array_like</span>
+<span class="sd">        Absolute Pressure [Pa]</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; gsw.Abs_Pressure_from_p([0, 500, 1000])</span>
+<span class="sd">    array([   101325.,   5101325.,  10101325.])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">    of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">    Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">    UNESCO (English), 196 pp. See Eqn. (2.2.1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">p</span> <span class="o">*</span> <span class="n">db2Pascal</span> <span class="o">+</span> <span class="n">P0</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="CT_from_entropy"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.CT_from_entropy">[docs]</a><span class="k">def</span> <span class="nf">CT_from_entropy</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">entropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Conservative Temperature with entropy as an input variable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    entropy : array_like</span>
+<span class="sd">              specific entropy [J kg :sup:`-1` K :sup:`-1`]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; entropy = [400.3892, 395.4378, 319.8668, 146.7910, 98.6471, 62.7919]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.CT_from_entropy(SA, entropy)</span>
+<span class="sd">    array([ 28.80990279,  28.43919923,  22.78619927,  10.22619767,</span>
+<span class="sd">             6.82719674,   4.32360295])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See appendix  A.10.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_from_entropy</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">entropy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">CT_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="CT_from_pt"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.CT_from_pt">[docs]</a><span class="k">def</span> <span class="nf">CT_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Conservative Temperature of seawater from potential</span>
+<span class="sd">    temperature (whose reference sea pressure is zero dbar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature referenced to a sea pressure of zero dbar</span>
+<span class="sd">         [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; pt = [28.7832, 28.4209, 22.7850, 10.2305, 6.8292, 4.3245]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.CT_from_pt(SA, pt)</span>
+<span class="sd">    array([ 28.80992302,  28.43914426,  22.78624661,  10.22616561,</span>
+<span class="sd">             6.82718342,   4.32356518])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">strip_mask</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+
+    <span class="n">pot_enthalpy</span> <span class="o">=</span> <span class="n">pot_enthalpy_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">pot_enthalpy</span> <span class="o">/</span> <span class="n">cp0</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="SA_Sstar_from_SP"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SA_Sstar_from_SP">[docs]</a><span class="k">def</span> <span class="nf">SA_Sstar_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO: docstring</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Note: with match_args_return, the variables inside</span>
+    <span class="c1"># this function are masked arrays, so the outputs of</span>
+    <span class="c1"># other functions called here are also masked arrays.</span>
+
+    <span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">check_input</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="n">saar</span><span class="p">,</span> <span class="n">in_ocean</span> <span class="o">=</span> <span class="n">SAAR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">uPS</span> <span class="o">*</span> <span class="n">SP</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">saar</span><span class="p">)</span>
+    <span class="n">Sstar</span> <span class="o">=</span> <span class="n">uPS</span> <span class="o">*</span> <span class="n">SP</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r1</span> <span class="o">*</span> <span class="n">saar</span><span class="p">)</span>
+
+    <span class="n">SA_baltic</span> <span class="o">=</span> <span class="n">SA_from_SP_Baltic</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">bmask</span> <span class="o">=</span> <span class="n">SA_baltic</span><span class="o">.</span><span class="n">mask</span>
+    <span class="k">if</span> <span class="n">bmask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">nomask</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bmask</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">inbaltic</span> <span class="o">=</span> <span class="o">~</span><span class="n">bmask</span>
+        <span class="n">SA</span><span class="p">[</span><span class="n">inbaltic</span><span class="p">]</span> <span class="o">=</span> <span class="n">SA_baltic</span><span class="p">[</span><span class="n">inbaltic</span><span class="p">]</span>
+        <span class="n">Sstar</span><span class="p">[</span><span class="n">inbaltic</span><span class="p">]</span> <span class="o">=</span> <span class="n">SA_baltic</span><span class="p">[</span><span class="n">inbaltic</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">SA</span><span class="p">,</span> <span class="n">Sstar</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="SA_from_Sstar"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SA_from_Sstar">[docs]</a><span class="k">def</span> <span class="nf">SA_from_Sstar</span><span class="p">(</span><span class="n">Sstar</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO: docstring</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># maybe add some input checking...</span>
+
+    <span class="n">saar</span><span class="p">,</span> <span class="n">in_ocean</span> <span class="o">=</span> <span class="n">SAAR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">Sstar</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">saar</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">r1</span> <span class="o">*</span> <span class="n">saar</span><span class="p">)</span>
+
+    <span class="c1"># In the Baltic Sea, SA = Sstar, and note that gsw_delta_SA returns zero</span>
+    <span class="c1"># for dSA in the Baltic.</span>
+
+    <span class="k">return</span> <span class="n">SA</span><span class="p">,</span> <span class="n">in_ocean</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="SP_from_SA"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SP_from_SA">[docs]</a><span class="k">def</span> <span class="nf">SP_from_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO: docstring</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># maybe add input checking...</span>
+
+    <span class="n">saar</span><span class="p">,</span> <span class="n">in_ocean</span> <span class="o">=</span> <span class="n">SAAR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">SP</span> <span class="o">=</span> <span class="p">(</span><span class="mi">35</span> <span class="o">/</span> <span class="mf">35.16504</span><span class="p">)</span> <span class="o">*</span> <span class="n">SA</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">saar</span><span class="p">)</span>
+
+    <span class="n">SP_baltic</span> <span class="o">=</span> <span class="n">SP_from_SA_Baltic</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">bmask</span> <span class="o">=</span> <span class="n">SP_baltic</span><span class="o">.</span><span class="n">mask</span>
+    <span class="k">if</span> <span class="n">bmask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">nomask</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bmask</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">inbaltic</span> <span class="o">=</span> <span class="o">~</span><span class="n">bmask</span>
+        <span class="n">SP</span><span class="p">[</span><span class="n">inbaltic</span><span class="p">]</span> <span class="o">=</span> <span class="n">SP_baltic</span><span class="p">[</span><span class="n">inbaltic</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">SP</span><span class="p">,</span> <span class="n">in_ocean</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="SP_from_SR"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SP_from_SR">[docs]</a><span class="k">def</span> <span class="nf">SP_from_SR</span><span class="p">(</span><span class="n">SR</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Practical Salinity from Reference Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    SR : array_like</span>
+<span class="sd">        Reference Salinity [g kg :sup:`-1`]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SP : array_like</span>
+<span class="sd">        Practical Salinity (PSS-78) [unitless]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">uPS</span> <span class="o">*</span> <span class="n">SR</span></div>
+
+
+<div class="viewcode-block" id="SP_from_Sstar"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SP_from_Sstar">[docs]</a><span class="k">def</span> <span class="nf">SP_from_Sstar</span><span class="p">():</span>
+    <span class="k">pass</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="SR_from_SP"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SR_from_SP">[docs]</a><span class="k">def</span> <span class="nf">SR_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Reference Salinity from Practical Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    SP : array_like</span>
+<span class="sd">        Practical Salinity (PSS-78) [unitless]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SR : array_like</span>
+<span class="sd">        Reference Salinity [g kg :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">uPS</span> <span class="o">*</span> <span class="n">SP</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="Sstar_from_SA"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.Sstar_from_SA">[docs]</a><span class="k">def</span> <span class="nf">Sstar_from_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO: docstring</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">saar</span><span class="p">,</span> <span class="n">in_ocean</span> <span class="o">=</span> <span class="n">SAAR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">Sstar</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r1</span> <span class="o">*</span> <span class="n">saar</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">saar</span><span class="p">)</span>
+    <span class="c1"># dSA is zero in Baltic</span>
+    <span class="k">return</span> <span class="n">Sstar</span><span class="p">,</span> <span class="n">in_ocean</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="CT_from_t"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.CT_from_t">[docs]</a><span class="k">def</span> <span class="nf">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Conservative Temperature of seawater from in situ</span>
+<span class="sd">    temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    t : array_like</span>
+<span class="sd">        in situ temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Find values that are out of range, set them to NaN.</span>
+    <span class="n">invalid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">p</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">t</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">,</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">12</span><span class="p">))</span>
+    <span class="n">t</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="n">invalid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">t</span> <span class="o">&gt;</span> <span class="mi">40</span><span class="p">,</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">12</span><span class="p">))</span>
+    <span class="n">t</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt0_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">CT_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CT</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="SA_from_SP"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.SA_from_SP">[docs]</a><span class="k">def</span> <span class="nf">SA_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates Absolute Salinity from Practical Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SP : array_like</span>
+<span class="sd">         salinity (PSS-78) [unitless]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+<span class="sd">    lon : array_like</span>
+<span class="sd">          decimal degrees east [0..+360] or [-180..+180]</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          decimal degrees (+ve N, -ve S) [-90..+90]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SA : masked array</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The mask is only set when the observation is well and truly on dry</span>
+<span class="sd">    land; often the warning flag is not set until one is several hundred</span>
+<span class="sd">    kilometers inland from the coast.</span>
+
+<span class="sd">    Since SP is non-negative by definition, this function changes any negative</span>
+<span class="sd">    input values of SP to be zero.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SP = [34.5487, 34.7275, 34.8605, 34.6810, 34.5680, 34.5600]</span>
+<span class="sd">    &gt;&gt;&gt; p = [10, 50, 125, 250, 600, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; lon = 188</span>
+<span class="sd">    &gt;&gt;&gt; lat = 4</span>
+<span class="sd">    &gt;&gt;&gt; gsw.SA_from_SP(SP, p, lon, lat)</span>
+<span class="sd">    array([ 34.71177834,  34.89152262,  35.02554486,  34.84722903,</span>
+<span class="sd">            34.73662847,  34.73236307])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 2.5 and appendices A.4 and A.5.</span>
+
+<span class="sd">    .. [2] McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm</span>
+<span class="sd">       for estimating Absolute Salinity in the global ocean. Submitted to Ocean</span>
+<span class="sd">       Science. A preliminary version is available at Ocean Sci. Discuss.,</span>
+<span class="sd">       6, 215-242.</span>
+<span class="sd">       http://www.ocean-sci-discuss.net/6/215/2009/osd-6-215-2009-print.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">check_input</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">SSO</span> <span class="o">/</span> <span class="mi">35</span><span class="p">)</span> <span class="o">*</span> <span class="n">SP</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">SAAR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">SA_baltic</span> <span class="o">=</span> <span class="n">SA_from_SP_Baltic</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="c1"># The following function (SAAR) finds SAAR in the non-Baltic parts of</span>
+    <span class="c1"># the world ocean.  (Actually, this SAAR look-up table returns values</span>
+    <span class="c1"># of zero in the Baltic Sea since SAAR in the Baltic is a function of SP,</span>
+    <span class="c1"># not space.</span>
+    <span class="k">if</span> <span class="n">SA_baltic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">SA</span><span class="p">[</span><span class="o">~</span><span class="n">SA_baltic</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">SA_baltic</span><span class="p">[</span><span class="o">~</span><span class="n">SA_baltic</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">SA</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="Sstar_from_SP"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.Sstar_from_SP">[docs]</a><span class="k">def</span> <span class="nf">Sstar_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Preformed Salinity from Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SP : array_like</span>
+<span class="sd">         salinity (PSS-78) [unitless]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+<span class="sd">    lon : array_like</span>
+<span class="sd">          decimal degrees east [0..+360] or [-180..+180]</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          decimal degrees (+ve N, -ve S) [-90..+90]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Sstar : masked array</span>
+<span class="sd">            Preformed Salinity [g kg :sup:`-1`]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The mask is only set when the observation is well and truly on dry</span>
+<span class="sd">    land; often the warning flag is not set until one is several hundred</span>
+<span class="sd">    kilometers inland from the coast.</span>
+
+<span class="sd">    Since SP is non-negative by definition, this function changes any negative</span>
+<span class="sd">    input values of SP to be zero.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SP = [34.5487, 34.7275, 34.8605, 34.6810, 34.5680, 34.5600]</span>
+<span class="sd">    &gt;&gt;&gt; p = [10, 50, 125, 250, 600, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; lon = 188</span>
+<span class="sd">    &gt;&gt;&gt; lat = 4</span>
+<span class="sd">    &gt;&gt;&gt; gsw.Sstar_from_SP(SP, p, lon, lat)</span>
+<span class="sd">    array([ 34.71155368,  34.8911614 ,  35.02465027,  34.84359314,</span>
+<span class="sd">            34.729034  ,  34.71967596])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 2.5 and appendices A.4 and A.5.</span>
+
+<span class="sd">    .. [2] McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm</span>
+<span class="sd">       for estimating Absolute Salinity in the global ocean. Submitted to Ocean</span>
+<span class="sd">       Science. A preliminary version is available at Ocean Sci. Discuss.,</span>
+<span class="sd">       6, 215-242.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">check_input</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="n">Sstar</span> <span class="o">=</span> <span class="p">(</span><span class="n">SSO</span> <span class="o">/</span> <span class="mf">35.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">SP</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">r1</span> <span class="o">*</span> <span class="n">SAAR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># In the Baltic Sea, Sstar==SA.</span>
+    <span class="n">Sstar_baltic</span> <span class="o">=</span> <span class="n">SA_from_SP_Baltic</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="c1"># TODO: Create Baltic and non-Baltic test cases.</span>
+    <span class="k">if</span> <span class="n">Sstar_baltic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Sstar</span><span class="p">[</span><span class="o">~</span><span class="n">Sstar_baltic</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Sstar_baltic</span><span class="p">[</span><span class="o">~</span><span class="n">Sstar_baltic</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">Sstar</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="deltaSA_from_SP"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.deltaSA_from_SP">[docs]</a><span class="k">def</span> <span class="nf">deltaSA_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">     gsw_deltaSA_from_SP                             Absolute Salinity Anomaly</span>
+<span class="sd">                                                       from Practical Salinity</span>
+<span class="sd">    ==========================================================================</span>
+
+<span class="sd">     USAGE:</span>
+<span class="sd">      deltaSA = gsw_deltaSA_from_SP(SP,p,long,lat)</span>
+
+<span class="sd">     DESCRIPTION:</span>
+<span class="sd">      Calculates Absolute Salinity Anomaly from Practical Salinity.  Since SP</span>
+<span class="sd">      is non-negative by definition, this function changes any negative input</span>
+<span class="sd">      values of SP to be zero.</span>
+
+<span class="sd">     INPUT:</span>
+<span class="sd">      SP   =  Practical Salinity  (PSS-78)                        [ unitless ]</span>
+<span class="sd">      p    =  sea pressure                                            [ dbar ]</span>
+<span class="sd">             ( i.e. absolute pressure - 10.1325 dbar )</span>
+<span class="sd">      long =  longitude in decimal degrees                      [ 0 ... +360 ]</span>
+<span class="sd">                                                         or  [ -180 ... +180 ]</span>
+<span class="sd">      lat  =  latitude in decimal degrees north                [ -90 ... +90 ]</span>
+
+<span class="sd">      p, lat &amp; long may have dimensions 1x1 or Mx1 or 1xN or MxN,</span>
+<span class="sd">      where SP is MxN.</span>
+
+<span class="sd">     OUTPUT:</span>
+<span class="sd">      deltaSA  =  Absolute Salinity Anomaly                           [ g/kg ]</span>
+
+<span class="sd">     AUTHOR:</span>
+<span class="sd">      Trevor McDougall &amp; Paul Barker                      [ help@teos-10.org ]</span>
+
+<span class="sd">     VERSION NUMBER: 3.03 (29th April, 2013)</span>
+
+<span class="sd">     REFERENCES:</span>
+<span class="sd">      IOC, SCOR and IAPSO, 2010: The international thermodynamic equation of</span>
+<span class="sd">       seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.  Available from http://www.TEOS-10.org</span>
+<span class="sd">        See section 2.5 and appendices A.4 and A.5 of this TEOS-10 Manual.</span>
+
+<span class="sd">      McDougall, T.J., D.R. Jackett, F.J. Millero, R. Pawlowicz and</span>
+<span class="sd">       P.M. Barker, 2012: A global algorithm for estimating Absolute Salinity.</span>
+<span class="sd">       Ocean Science, 8, 1117-1128.</span>
+<span class="sd">       http://www.ocean-sci.net/8/1117/2012/os-8-1117-2012.pdf</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">SA_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span> <span class="o">-</span> <span class="n">SR_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="depth_from_z"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.depth_from_z">[docs]</a><span class="k">def</span> <span class="nf">depth_from_z</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates depth from height, z.  Note that in general height is</span>
+<span class="sd">    negative in the ocean.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    z : array_like</span>
+<span class="sd">        height [m]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    depth : array_like</span>
+<span class="sd">        depth [m]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="o">-</span><span class="n">z</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="entropy_from_CT"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.entropy_from_CT">[docs]</a><span class="k">def</span> <span class="nf">entropy_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates specific entropy of seawater.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    entropy : array_like</span>
+<span class="sd">              specific entropy [J kg :sup:`-1` K :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; CT = [28.8099, 28.4392, 22.7862, 10.2262, 6.8272, 4.3236]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.entropy_from_CT(SA, CT)</span>
+<span class="sd">    array([ 400.38916315,  395.43781023,  319.86680989,  146.79103279,</span>
+<span class="sd">             98.64714648,   62.79185763])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See appendix A.10.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="entropy_from_pt"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.entropy_from_pt">[docs]</a><span class="k">def</span> <span class="nf">entropy_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates specific entropy of seawater.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    entropy : array_like</span>
+<span class="sd">              specific entropy [J kg :sup:`-1` K :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; pt = [28.7832, 28.4210, 22.7850, 10.2305, 6.8292, 4.3245]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.entropy_from_pt(SA, pt)</span>
+<span class="sd">    array([ 400.38946744,  395.43839949,  319.86743859,  146.79054828,</span>
+<span class="sd">             98.64691006,   62.79135672])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See appendix A.10.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="entropy_from_t"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.entropy_from_t">[docs]</a><span class="k">def</span> <span class="nf">entropy_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">     gsw_entropy_from_t                          specific entropy of seawater</span>
+<span class="sd">    ==========================================================================</span>
+
+<span class="sd">     USAGE:</span>
+<span class="sd">      entropy  =  gsw_entropy_from_t(SA,t,p)</span>
+
+<span class="sd">     DESCRIPTION:</span>
+<span class="sd">      Calculates specific entropy of seawater.</span>
+
+<span class="sd">     INPUT:</span>
+<span class="sd">      SA  =  Absolute Salinity                                        [ g/kg ]</span>
+<span class="sd">      t   =  in-situ temperature (ITS-90)                            [ deg C ]</span>
+<span class="sd">      p   =  sea pressure                                             [ dbar ]</span>
+<span class="sd">             ( i.e. absolute pressure - 10.1325 dbar )</span>
+
+<span class="sd">      SA &amp; t need to have the same dimensions.</span>
+<span class="sd">      p may have dimensions 1x1 or Mx1 or 1xN or MxN, where SA &amp; t are MxN.</span>
+
+<span class="sd">     OUTPUT:</span>
+<span class="sd">      entropy  =  specific entropy                                [ J/(kg*K) ]</span>
+
+<span class="sd">     AUTHOR:</span>
+<span class="sd">      David Jackett, Trevor McDougall and Paul Barker     [ help@teos-10.org ]</span>
+
+<span class="sd">     VERSION NUMBER: 3.03 (29th April, 2013)</span>
+
+<span class="sd">     REFERENCES:</span>
+<span class="sd">      IOC, SCOR and IAPSO, 2010: The international thermodynamic equation of</span>
+<span class="sd">       seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.  Available from http://www.TEOS-10.org</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="o">-</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="ionic_strength_from_SA"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.ionic_strength_from_SA">[docs]</a><span class="k">def</span> <span class="nf">ionic_strength_from_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the ionic strength of seawater from Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ionic_strength : array_like</span>
+<span class="sd">                     ionic strength of seawater [mol kg :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.ionic_strength_from_SA(SA)</span>
+<span class="sd">    array([ 0.71298118,  0.71680567,  0.71966059,  0.71586272,  0.71350891,</span>
+<span class="sd">            0.71341953])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Table L.1.</span>
+
+<span class="sd">    .. [2] Millero, F. J., R. Feistel, D. G. Wright, and T. J. McDougall, 2008:</span>
+<span class="sd">       The composition of Standard Seawater and the definition of the</span>
+<span class="sd">       Reference-Composition Salinity Scale, Deep-Sea Res. I, 55, 50-72.</span>
+<span class="sd">       See Eqns. 5.9 and 5.12.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Molality of seawater in mol kg :sup:`-1`</span>
+    <span class="n">molality</span> <span class="o">=</span> <span class="n">molality_from_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">valence_factor</span> <span class="o">*</span> <span class="n">molality</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="molality_from_SA"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.molality_from_SA">[docs]</a><span class="k">def</span> <span class="nf">molality_from_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the molality of seawater from Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    molality : array_like</span>
+<span class="sd">            seawater molality [mol kg :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.molality_from_SA(SA)</span>
+<span class="sd">    array([ 1.14508476,  1.15122708,  1.15581223,  1.14971265,  1.14593231,</span>
+<span class="sd">            1.14578877])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Molality of seawater in mol kg :sup:`-1`.</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">molality</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">/</span> <span class="p">(</span><span class="n">M_S</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1000</span> <span class="o">-</span> <span class="n">SA</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">molality</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="p_from_Abs_Pressure"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.p_from_Abs_Pressure">[docs]</a><span class="k">def</span> <span class="nf">p_from_Abs_Pressure</span><span class="p">(</span><span class="n">Absolute_Pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates sea pressure from Absolute Pressure. Note that Absolute</span>
+<span class="sd">    Pressure is in Pa NOT dbar.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    Absolute_Pressure : array_like</span>
+<span class="sd">                        Absolute Pressure [Pa]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.2.1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">Absolute_Pressure</span> <span class="o">-</span> <span class="n">P0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">db2Pascal</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="p_from_z"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.p_from_z">[docs]</a><span class="k">def</span> <span class="nf">p_from_z</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">geo_strf_dyn_height</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates sea pressure from height using computationally-efficient</span>
+<span class="sd">    48-term expression for density, in terms of SA, CT and p (McDougall et al.,</span>
+<span class="sd">    2011).  Dynamic height anomaly, geo_strf_dyn_height, if provided, must be</span>
+<span class="sd">    computed with its pr=0 (the surface.)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    z : array_like</span>
+<span class="sd">        height [m]</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          latitude in decimal degrees north [-90..+90]</span>
+<span class="sd">    geo_strf_dyn_height : float, optional</span>
+<span class="sd">                          dynamic height anomaly [ m :sup:`2` s :sup:`-2` ]</span>
+<span class="sd">                          The reference pressure (p_ref) of geo_strf_dyn_height</span>
+<span class="sd">                          must be zero (0) dbar.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; z = [-10., -50., -125., -250., -600., -1000.]</span>
+<span class="sd">    &gt;&gt;&gt; lat = 4.</span>
+<span class="sd">    &gt;&gt;&gt; gsw.p_from_z(z, lat)</span>
+<span class="sd">    array([   10.05572704,    50.28354425,   125.73185732,   251.54028663,</span>
+<span class="sd">             604.2099135 ,  1007.9900587 ])</span>
+<span class="sd">    &gt;&gt;&gt; -gsw.z_from_p(gsw.p_from_z(z, lat), lat)</span>
+<span class="sd">    array([  10.,   50.,  125.,  250.,  600., 1000.])</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Height (z) is NEGATIVE in the ocean. Depth is -z. Depth is not used in the</span>
+<span class="sd">    gibbs library.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011: A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in terms of Conservative Temperature, and related properties of seawater.</span>
+
+<span class="sd">    .. [3] Moritz (2000) Goedetic reference system 1980. J. Geodesy, 74,</span>
+<span class="sd">       128-133.</span>
+
+<span class="sd">    .. [4] Saunders, P. M., 1981: Practical conversion of pressure to depth.</span>
+<span class="sd">       Journal of Physical Oceanography, 11, 573-574.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span>
+    <span class="n">sin2</span> <span class="o">=</span> <span class="n">X</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="mf">9.780327</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="p">(</span><span class="mf">5.2792e-3</span> <span class="o">+</span> <span class="p">(</span><span class="mf">2.32e-5</span> <span class="o">*</span> <span class="n">sin2</span><span class="p">))</span> <span class="o">*</span> <span class="n">sin2</span><span class="p">)</span>
+
+    <span class="c1"># get the first estimate of p from Saunders (1981)</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="mf">5.25e-3</span> <span class="o">*</span> <span class="n">sin2</span> <span class="o">+</span> <span class="mf">5.92e-3</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">z</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c1</span><span class="p">)</span> <span class="o">+</span> <span class="mf">8.84e-6</span> <span class="o">*</span> <span class="n">z</span><span class="p">))</span>
+
+    <span class="n">df_dp</span> <span class="o">=</span> <span class="n">db2Pascal</span> <span class="o">*</span> <span class="n">specvol_SSO_0_p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># Initial value for f derivative.</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">enthalpy_SSO_0_p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">gs</span> <span class="o">*</span>
+         <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">z</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">geo_strf_dyn_height</span><span class="p">)</span>
+
+    <span class="n">p_old</span> <span class="o">=</span> <span class="n">p</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p_old</span> <span class="o">-</span> <span class="n">f</span> <span class="o">/</span> <span class="n">df_dp</span>
+    <span class="n">p_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">p_old</span><span class="p">)</span>
+    <span class="n">df_dp</span> <span class="o">=</span> <span class="n">db2Pascal</span> <span class="o">*</span> <span class="n">specvol_SSO_0_p</span><span class="p">(</span><span class="n">p_mid</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p_old</span> <span class="o">-</span> <span class="n">f</span> <span class="o">/</span> <span class="n">df_dp</span>
+
+    <span class="c1"># After this one iteration through this modified Newton-Raphson iterative</span>
+    <span class="c1"># procedure, the remaining error in p is at computer machine precision,</span>
+    <span class="c1"># being no more than 1.6e-10 dbar.</span>
+
+    <span class="k">return</span> <span class="n">p</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pot_enthalpy_from_pt"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.pot_enthalpy_from_pt">[docs]</a><span class="k">def</span> <span class="nf">pot_enthalpy_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the potential enthalpy of seawater from potential</span>
+<span class="sd">    temperature (whose reference sea pressure is zero dbar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature referenced to a sea pressure of zero dbar</span>
+<span class="sd">         [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pot_enthalpy : array_like</span>
+<span class="sd">                   potential enthalpy [J kg :sup:`-1`]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; pt = [28.7832, 28.4209, 22.7850, 10.2305, 6.8292, 4.3245]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.pot_enthalpy_from_pt(SA, pt)</span>
+<span class="sd">    array([ 115005.40853458,  113525.30870246,   90959.68769935,</span>
+<span class="sd">             40821.50280454,   27253.21472227,   17259.10131183])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">strip_mask</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">sfac</span> <span class="o">*</span> <span class="n">SA</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">pt</span> <span class="o">*</span> <span class="mf">0.025</span>  <span class="c1"># Normalize for F03 and F08</span>
+
+    <span class="n">pot_enthalpy</span> <span class="o">=</span> <span class="p">(</span><span class="mf">61.01362420681071</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">168776.46138048015</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">2735.2785605119625</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2574.2164453821433</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1536.6644434977543</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">545.7340497931629</span> <span class="o">+</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">50.91091728474331</span> <span class="o">-</span> <span class="mf">18.30489878927802</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="p">)))))</span> <span class="o">+</span>
+    <span class="n">x2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">268.5520265845071</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">12019.028203559312</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3734.858026725145</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">2046.7671145057618</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">465.28655623826234</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.6370820302376359</span> <span class="o">-</span>
+    <span class="mf">10.650848542359153</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="p">))))</span> <span class="o">+</span>
+    <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mf">937.2099110620707</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">588.1802812170108</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">248.39476522971285</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mf">3.871557904936333</span> <span class="o">-</span>
+    <span class="mf">2.6268019854268356</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="p">))</span> <span class="o">+</span>
+    <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1687.914374187449</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mf">246.9598888781377</span> <span class="o">+</span>
+    <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mf">123.59576582457964</span> <span class="o">-</span> <span class="mf">48.5891069025409</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">936.3206544460336</span> <span class="o">+</span>
+    <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">942.7827304544439</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">369.4389437509002</span> <span class="o">+</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">33.83664947895248</span> <span class="o">-</span> <span class="mf">9.987880382780322</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="p">)))))))</span>
+
+    <span class="c1"># The above polynomial for pot_enthalpy is the full expression for</span>
+    <span class="c1"># potential enthalpy in terms of SA and pt, obtained from the Gibbs function</span>
+    <span class="c1"># as below.  It has simply collected like powers of x and y so that it is</span>
+    <span class="c1"># computationally faster than calling the Gibbs function twice as is done in</span>
+    <span class="c1"># the commented code below. When this code below is run, the results are</span>
+    <span class="c1"># identical to calculating pot_enthalpy as above, to machine precision.</span>
+
+    <span class="c1"># g000 = gibbs(n0, n0, n0, SA, pt, 0)</span>
+    <span class="c1"># g010 = gibbs(n0, n1, n0, SA, pt, 0)</span>
+    <span class="c1"># pot_enthalpy = g000 - (Kelvin + pt) * g010</span>
+
+    <span class="c1"># This is the end of the alternative code</span>
+    <span class="c1"># %timeit gsw.CT_from_pt(SA, pt)</span>
+    <span class="c1"># 1000 loops, best of 3: 1.34 ms per loop &lt;- calling gibbs</span>
+    <span class="c1"># 1000 loops, best of 3: 254 us per loop &lt;- standard</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pot_enthalpy</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pt0_from_t"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.pt0_from_t">[docs]</a><span class="k">def</span> <span class="nf">pt0_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential temperature with reference pressure, pr = 0 dbar.</span>
+<span class="sd">    The present routine is computationally faster than the more general</span>
+<span class="sd">    function &quot;pt_from_t(SA, t, p, pr)&quot; which can be used for any reference</span>
+<span class="sd">    pressure value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    t : array_like</span>
+<span class="sd">        in situ temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pt0 : array_like</span>
+<span class="sd">          potential temperature relative to 0 dbar [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    entropy_part, gibbs_pt0_pt0, entropy_part_zerop</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    pt_from_t  has the same result (only slower)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; t = [28.7856, 28.4329, 22.8103, 10.2600, 6.8863, 4.4036]</span>
+<span class="sd">    &gt;&gt;&gt; p = [10, 50, 125, 250, 600, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.pt0_from_t(SA, t, p)</span>
+<span class="sd">    array([ 28.78319682,  28.42098334,  22.7849304 ,  10.23052366,</span>
+<span class="sd">             6.82923022,   4.32451057])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.1.</span>
+
+<span class="sd">    .. [2] McDougall T. J., D. R. Jackett, P. M. Barker, C. Roberts-Thomson,</span>
+<span class="sd">       R. Feistel and R. W. Hallberg, 2010:  A computationally efficient 25-term</span>
+<span class="sd">       expression for the density of seawater in terms of Conservative</span>
+<span class="sd">       Temperature, and related properties of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">*</span> <span class="p">(</span><span class="mf">35.</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">)</span>
+
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mf">8.65483913395442e-6</span> <span class="o">-</span>
+             <span class="n">s1</span> <span class="o">*</span> <span class="mf">1.41636299744881e-6</span> <span class="o">-</span>
+              <span class="n">p</span> <span class="o">*</span> <span class="mf">7.38286467135737e-9</span> <span class="o">+</span>
+              <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">8.38241357039698e-6</span> <span class="o">+</span>
+             <span class="n">s1</span> <span class="o">*</span> <span class="mf">2.83933368585534e-8</span> <span class="o">+</span>
+              <span class="n">t</span> <span class="o">*</span> <span class="mf">1.77803965218656e-8</span> <span class="o">+</span>
+              <span class="n">p</span> <span class="o">*</span> <span class="mf">1.71155619208233e-10</span><span class="p">))</span>
+
+    <span class="n">dentropy_dt</span> <span class="o">=</span> <span class="n">cp0</span> <span class="o">/</span> <span class="p">((</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">)))</span>
+
+    <span class="n">true_entropy_part</span> <span class="o">=</span> <span class="n">entropy_part</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">Number_of_iterations</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">pt0_old</span> <span class="o">=</span> <span class="n">pt0</span>
+        <span class="n">dentropy</span> <span class="o">=</span> <span class="n">entropy_part_zerop</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0_old</span><span class="p">)</span> <span class="o">-</span> <span class="n">true_entropy_part</span>
+        <span class="c1"># Half way the mod. method (McDougall and Wotherspoon, 2012).</span>
+        <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt0_old</span> <span class="o">-</span> <span class="n">dentropy</span> <span class="o">/</span> <span class="n">dentropy_dt</span>
+        <span class="n">pt0m</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">pt0</span> <span class="o">+</span> <span class="n">pt0_old</span><span class="p">)</span>
+        <span class="n">dentropy_dt</span> <span class="o">=</span> <span class="o">-</span><span class="n">gibbs_pt0_pt0</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0m</span><span class="p">)</span>
+        <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt0_old</span> <span class="o">-</span> <span class="n">dentropy</span> <span class="o">/</span> <span class="n">dentropy_dt</span>
+
+    <span class="c1"># maximum error of 6.3x10^-9 degrees C for one iteration. maximum error is</span>
+    <span class="c1"># 1.8x10^-14 degrees C for two iterations (two iterations is the default,</span>
+    <span class="c1"># &quot;for Number_of_iterations = 1:2&quot;).  These errors are over the full</span>
+    <span class="c1"># &quot;oceanographic funnel&quot; of McDougall et al. (2010), which reaches down to</span>
+    <span class="c1"># p = 8000 dbar.</span>
+
+    <span class="k">return</span> <span class="n">pt0</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pt_from_CT"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.pt_from_CT">[docs]</a><span class="k">def</span> <span class="nf">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential temperature (with a reference sea pressure of zero</span>
+<span class="sd">    dbar) from Conservative Temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature referenced to a sea pressure of zero dbar</span>
+<span class="sd">         [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    specvol_anom</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses 1.5 iterations through a modified Newton-Raphson (N-R)</span>
+<span class="sd">    iterative solution procedure, starting from a rational-function-based</span>
+<span class="sd">    initial condition for both pt and dCT_dpt.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; CT = [28.8099, 28.4392, 22.7862, 10.2262, 6.8272, 4.3236]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.pt_from_CT(SA, CT)</span>
+<span class="sd">    array([ 28.78317705,  28.4209556 ,  22.78495347,  10.23053439,</span>
+<span class="sd">             6.82921659,   4.32453484])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See sections 3.1 and 3.3.</span>
+
+<span class="sd">    .. [2] McDougall T. J., D. R. Jackett, P. M. Barker, C. Roberts-Thomson,</span>
+<span class="sd">       R. Feistel and R. W. Hallberg, 2010:  A computationally efficient</span>
+<span class="sd">       25-term expression for the density of seawater in terms of Conservative</span>
+<span class="sd">       Temperature, and related properties of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">strip_mask</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">35.</span> <span class="o">/</span> <span class="n">SSO</span>
+
+    <span class="n">a0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.446013646344788e-2</span>
+    <span class="n">a1</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.305308995852924e-3</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="mf">1.062415929128982e-4</span>
+    <span class="n">a3</span> <span class="o">=</span> <span class="mf">9.477566673794488e-1</span>
+    <span class="n">a4</span> <span class="o">=</span> <span class="mf">2.166591947736613e-3</span>
+    <span class="n">a5</span> <span class="o">=</span> <span class="mf">3.828842955039902e-3</span>
+
+    <span class="n">b0</span> <span class="o">=</span> <span class="mf">1.000000000000000e+0</span>
+    <span class="n">b1</span> <span class="o">=</span> <span class="mf">6.506097115635800e-4</span>
+    <span class="n">b2</span> <span class="o">=</span> <span class="mf">3.830289486850898e-3</span>
+    <span class="n">b3</span> <span class="o">=</span> <span class="mf">1.247811760368034e-6</span>
+
+    <span class="n">a5CT</span> <span class="o">=</span> <span class="n">a5</span> <span class="o">*</span> <span class="n">CT</span>
+    <span class="n">b3CT</span> <span class="o">=</span> <span class="n">b3</span> <span class="o">*</span> <span class="n">CT</span>
+    <span class="n">CT_factor</span> <span class="o">=</span> <span class="p">(</span><span class="n">a3</span> <span class="o">+</span> <span class="n">a4</span> <span class="o">*</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">a5CT</span><span class="p">)</span>
+    <span class="n">pt_num</span> <span class="o">=</span> <span class="n">a0</span> <span class="o">+</span> <span class="n">s1</span> <span class="o">*</span> <span class="p">(</span><span class="n">a1</span> <span class="o">+</span> <span class="n">a2</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span> <span class="o">+</span> <span class="n">CT</span> <span class="o">*</span> <span class="n">CT_factor</span>
+    <span class="n">pt_den</span> <span class="o">=</span> <span class="n">b0</span> <span class="o">+</span> <span class="n">b1</span> <span class="o">*</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">CT</span> <span class="o">*</span> <span class="p">(</span><span class="n">b2</span> <span class="o">+</span> <span class="n">b3CT</span><span class="p">)</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_num</span> <span class="o">/</span> <span class="n">pt_den</span>
+
+    <span class="n">dCT_dpt</span> <span class="o">=</span> <span class="n">pt_den</span> <span class="o">/</span> <span class="p">(</span><span class="n">CT_factor</span> <span class="o">+</span> <span class="n">a5CT</span> <span class="o">-</span> <span class="p">(</span><span class="n">b2</span> <span class="o">+</span> <span class="n">b3CT</span> <span class="o">+</span> <span class="n">b3CT</span><span class="p">)</span> <span class="o">*</span> <span class="n">pt</span><span class="p">)</span>
+
+    <span class="c1"># 1.5 iterations through the modified Newton-Rapshon iterative method</span>
+    <span class="n">CT_diff</span> <span class="o">=</span> <span class="n">CT_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="o">-</span> <span class="n">CT</span>
+    <span class="n">pt_old</span> <span class="o">=</span> <span class="n">pt</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">CT_diff</span> <span class="o">/</span> <span class="n">dCT_dpt</span>  <span class="c1"># 1/2-way through the 1st modified N-R.</span>
+    <span class="n">ptm</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">pt</span> <span class="o">+</span> <span class="n">pt_old</span><span class="p">)</span>
+
+    <span class="c1"># This routine calls gibbs_pt0_pt0(SA, pt0) to get the second derivative of</span>
+    <span class="c1"># the Gibbs function with respect to temperature at zero sea pressure.</span>
+
+    <span class="n">dCT_dpt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">ptm</span> <span class="o">+</span> <span class="n">Kelvin</span><span class="p">)</span> <span class="o">*</span> <span class="n">gibbs_pt0_pt0</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">ptm</span><span class="p">)</span> <span class="o">/</span> <span class="n">cp0</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">CT_diff</span> <span class="o">/</span> <span class="n">dCT_dpt</span>  <span class="c1"># End of 1st full modified N-R iteration.</span>
+    <span class="n">CT_diff</span> <span class="o">=</span> <span class="n">CT_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="o">-</span> <span class="n">CT</span>
+    <span class="n">pt_old</span> <span class="o">=</span> <span class="n">pt</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">CT_diff</span> <span class="o">/</span> <span class="n">dCT_dpt</span>  <span class="c1"># 1.5 iterations of the modified N-R.</span>
+    <span class="c1"># Abs max error of result is 1.42e-14 deg C.</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pt_from_entropy"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.pt_from_entropy">[docs]</a><span class="k">def</span> <span class="nf">pt_from_entropy</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">entropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential temperature with reference pressure p_ref = 0 dbar</span>
+<span class="sd">    and with entropy as an input variable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    entropy : array_like</span>
+<span class="sd">              specific entropy [J kg :sup:`-1` K :sup:`-1`]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">         with reference sea pressure (p_ref) = 0 dbar.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; entropy = [400.3892, 395.4378, 319.8668, 146.7910, 98.6471, 62.7919]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.pt_from_entropy(SA, entropy)</span>
+<span class="sd">    array([ 28.78317983,  28.42095483,  22.78495274,  10.23053207,</span>
+<span class="sd">             6.82921333,   4.32453778])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See appendix  A.10.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">part1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span>
+    <span class="n">part2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">part1</span>
+    <span class="n">ent_SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">cp0</span> <span class="o">/</span> <span class="n">Kelvin</span><span class="p">)</span> <span class="o">*</span> <span class="n">part1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">1.01</span> <span class="o">*</span> <span class="n">part1</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">entropy</span> <span class="o">-</span> <span class="n">ent_SA</span><span class="p">)</span> <span class="o">*</span> <span class="n">part2</span> <span class="o">/</span> <span class="n">cp0</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">Kelvin</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dentropy_dt</span> <span class="o">=</span> <span class="n">cp0</span> <span class="o">/</span> <span class="p">((</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span><span class="p">)</span> <span class="o">*</span> <span class="n">part2</span><span class="p">)</span>  <span class="c1"># Initial dentropy_dt.</span>
+
+    <span class="k">for</span> <span class="n">Number_of_iterations</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">pt_old</span> <span class="o">=</span> <span class="n">pt</span>
+        <span class="n">dentropy</span> <span class="o">=</span> <span class="n">entropy_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt_old</span><span class="p">)</span> <span class="o">-</span> <span class="n">entropy</span>
+        <span class="c1"># This is half way through the modified method</span>
+        <span class="c1"># (McDougall and Wotherspoon, 2012)</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">dentropy</span> <span class="o">/</span> <span class="n">dentropy_dt</span>
+        <span class="n">ptm</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">pt</span> <span class="o">+</span> <span class="n">pt_old</span><span class="p">)</span>
+        <span class="n">dentropy_dt</span> <span class="o">=</span> <span class="o">-</span><span class="n">gibbs_pt0_pt0</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">ptm</span><span class="p">)</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">dentropy</span> <span class="o">/</span> <span class="n">dentropy_dt</span>
+
+    <span class="c1"># maximum error of 2.2x10^-6 degrees C for one iteration. maximum error is</span>
+    <span class="c1"># 1.4x10^-14 degrees C for two iterations (two iterations is the default,</span>
+    <span class="c1"># &quot;for Number_of_iterations = 1:2&quot;).</span>
+
+    <span class="k">return</span> <span class="n">pt</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pt_from_t"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.pt_from_t">[docs]</a><span class="k">def</span> <span class="nf">pt_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">p_ref</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential temperature with the general reference pressure,</span>
+<span class="sd">    pr, from in situ temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    t : array_like</span>
+<span class="sd">        in situ temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+<span class="sd">    p_ref : int, float, optional</span>
+<span class="sd">         reference pressure, default = 0</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function calls `entropy_part` which evaluates entropy except for the</span>
+<span class="sd">    parts which are a function of Absolute Salinity alone. A faster routine</span>
+<span class="sd">    exists pt0_from_t(SA,t,p) if p_ref is indeed zero dbar.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; t = [28.7856, 28.4329, 22.8103, 10.2600, 6.8863, 4.4036]</span>
+<span class="sd">    &gt;&gt;&gt; p = [10, 50, 125, 250, 600, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.pt_from_t(SA, t, p)</span>
+<span class="sd">    array([ 28.78319682,  28.42098334,  22.7849304 ,  10.23052366,</span>
+<span class="sd">             6.82923022,   4.32451057])</span>
+<span class="sd">    &gt;&gt;&gt; gsw.pt_from_t(SA, t, p, p_ref=1000)</span>
+<span class="sd">    array([ 29.02665528,  28.662375  ,  22.99149634,  10.35341725,</span>
+<span class="sd">             6.92732954,   4.4036    ])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.1.</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in terms of Conservative Temperature, and related properties of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">p_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">p_ref</span><span class="p">)</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">*</span> <span class="mf">35.</span> <span class="o">/</span> <span class="n">SSO</span>
+
+    <span class="n">pt</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">p_ref</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">8.65483913395442e-6</span> <span class="o">-</span>
+                       <span class="n">s1</span> <span class="o">*</span> <span class="mf">1.41636299744881e-6</span> <span class="o">-</span>
+              <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">p_ref</span><span class="p">)</span> <span class="o">*</span> <span class="mf">7.38286467135737e-9</span> <span class="o">+</span>
+                        <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">8.38241357039698e-6</span> <span class="o">+</span>
+                       <span class="n">s1</span> <span class="o">*</span> <span class="mf">2.83933368585534e-8</span> <span class="o">+</span>
+                        <span class="n">t</span> <span class="o">*</span> <span class="mf">1.77803965218656e-8</span> <span class="o">+</span>
+              <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">p_ref</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.71155619208233e-10</span><span class="p">)))</span>
+
+    <span class="n">dentropy_dt</span> <span class="o">=</span> <span class="n">cp0</span> <span class="o">/</span> <span class="p">((</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span><span class="p">)</span> <span class="o">*</span>
+                         <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SA</span> <span class="o">/</span> <span class="n">SSO</span><span class="p">)))</span>
+
+    <span class="n">true_entropy_part</span> <span class="o">=</span> <span class="n">entropy_part</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">Number_of_iterations</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">pt_old</span> <span class="o">=</span> <span class="n">pt</span>
+        <span class="n">dentropy</span> <span class="o">=</span> <span class="n">entropy_part</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt_old</span><span class="p">,</span> <span class="n">p_ref</span><span class="p">)</span> <span class="o">-</span> <span class="n">true_entropy_part</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">dentropy</span> <span class="o">/</span> <span class="n">dentropy_dt</span>  <span class="c1"># half way through the method</span>
+        <span class="n">ptm</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">pt</span> <span class="o">+</span> <span class="n">pt_old</span><span class="p">)</span>
+        <span class="n">dentropy_dt</span> <span class="o">=</span> <span class="o">-</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">ptm</span><span class="p">,</span> <span class="n">p_ref</span><span class="p">)</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_old</span> <span class="o">-</span> <span class="n">dentropy</span> <span class="o">/</span> <span class="n">dentropy_dt</span>
+
+    <span class="c1"># maximum error of 6.3x10^-9 degrees C for one iteration.  maximum error</span>
+    <span class="c1"># is 1.8x10^-14 degrees C for two iterations (two iterations is the default,</span>
+    <span class="c1"># &quot;for Number_of_iterations = 1:2).  These errors are over the full</span>
+    <span class="c1"># &quot;oceanographic funnel&quot; of McDougall et al. (2010), which reaches down to</span>
+    <span class="c1"># p = 8000 dbar.</span>
+
+    <span class="k">return</span> <span class="n">pt</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="t90_from_t48"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.t90_from_t48">[docs]</a><span class="k">def</span> <span class="nf">t90_from_t48</span><span class="p">(</span><span class="n">t48</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts IPTS-48 temperature to International Temperature Scale 1990</span>
+<span class="sd">    (ITS-90) temperature.  This conversion should be applied to all in-situ</span>
+<span class="sd">    data collected prior to 31/12/1967.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    t48 : array_like</span>
+<span class="sd">          in-situ temperature [:math:`^\circ` C (ITPS-48)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t90 : array_like</span>
+<span class="sd">          in-situ temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] International Temperature Scales of 1948, 1968 and 1990, an ICES</span>
+<span class="sd">       note, available from http://www.ices.dk/ocean/procedures/its.htm</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">t48</span> <span class="o">-</span> <span class="p">(</span><span class="mf">4.4e-6</span><span class="p">)</span> <span class="o">*</span> <span class="n">t48</span> <span class="o">*</span> <span class="p">(</span><span class="mi">100</span> <span class="o">-</span> <span class="n">t48</span><span class="p">))</span> <span class="o">/</span> <span class="mf">1.00024</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="t90_from_t68"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.t90_from_t68">[docs]</a><span class="k">def</span> <span class="nf">t90_from_t68</span><span class="p">(</span><span class="n">t68</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts IPTS-68 temperature to International Temperature Scale 1990</span>
+<span class="sd">    (ITS-90) temperature.  This conversion should be applied to all in-situ</span>
+<span class="sd">    data collected between 1/1/1968 and 31/12/1989.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    t68 : array_like</span>
+<span class="sd">          in-situ temperature [:math:`^\circ` C (ITPS-68)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t90 : array_like</span>
+<span class="sd">          in-situ temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] International Temperature Scales of 1948, 1968 and 1990, an ICES</span>
+<span class="sd">       note, available from http://www.ices.dk/ocean/procedures/its.htm</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">t68</span> <span class="o">*</span> <span class="mf">0.999760057586179</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="t_from_CT"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.t_from_CT">[docs]</a><span class="k">def</span> <span class="nf">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates *in-situ* temperature from Conservative Temperature of</span>
+<span class="sd">    seawater.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t : array_like</span>
+<span class="sd">        in situ temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = [34.7118, 34.8915, 35.0256, 34.8472, 34.7366, 34.7324]</span>
+<span class="sd">    &gt;&gt;&gt; CT = [28.8099, 28.4392, 22.7862, 10.2262, 6.8272, 4.3236]</span>
+<span class="sd">    &gt;&gt;&gt; p = [10, 50, 125, 250, 600, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.t_from_CT(SA, CT, p)</span>
+<span class="sd">    array([ 28.78558023,  28.43287225,  22.81032309,  10.26001075,</span>
+<span class="sd">             6.8862863 ,   4.40362445])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See sections 3.1 and 3.3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pt_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="t_from_entropy"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.t_from_entropy">[docs]</a><span class="k">def</span> <span class="nf">t_from_entropy</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">entropy</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    gsw_t_from_entropy                                    in-situ temperature</span>
+<span class="sd">                                                     as a function of entropy</span>
+<span class="sd">    =========================================================================</span>
+
+<span class="sd">    USAGE:</span>
+<span class="sd">     t = gsw_t_from_entropy(SA,entropy,p)</span>
+
+<span class="sd">    DESCRIPTION:</span>
+<span class="sd">     Calculates in-situ temperature with entropy as an input variable.</span>
+
+<span class="sd">    INPUT:</span>
+<span class="sd">     SA       =  Absolute Salinity                                   [ g/kg ]</span>
+<span class="sd">     entropy  =  specific entropy                                [ J/(kg*K) ]</span>
+<span class="sd">     p   =  sea pressure                                             [ dbar ]</span>
+<span class="sd">            ( i.e. absolute pressure - 10.1325 dbar )</span>
+
+<span class="sd">     SA &amp; entropy need to have the same dimensions.</span>
+<span class="sd">     p may have dimensions 1x1 or Mx1 or 1xN or MxN, where SA &amp; entropy are</span>
+<span class="sd">     MxN.</span>
+
+<span class="sd">    OUTPUT:</span>
+<span class="sd">     t   =  in-situ temperature (ITS-90)                            [ deg C ]</span>
+
+<span class="sd">    AUTHOR:</span>
+<span class="sd">     Trevor McDougall and Paul Barker                    [ help@teos-10.org ]</span>
+
+<span class="sd">    VERSION NUMBER: 3.03 (29th April, 2013)</span>
+
+<span class="sd">    REFERENCES:</span>
+<span class="sd">     IOC, SCOR and IAPSO, 2010: The international thermodynamic equation of</span>
+<span class="sd">      seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">      Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">      UNESCO (English), 196 pp.  Available from http://www.TEOS-10.org</span>
+<span class="sd">      See appendix  A.10 of this TEOS-10 Manual.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_from_entropy</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">entropy</span><span class="p">)</span>
+    <span class="c1"># Note that pt is potential temperature with a reference pressure of zero.</span>
+    <span class="n">p0</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">pt_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="z_from_depth"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.z_from_depth">[docs]</a><span class="k">def</span> <span class="nf">z_from_depth</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates height, z, from depth.  Note that in general height is</span>
+<span class="sd">    negative in the ocean.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    depth : array_like</span>
+<span class="sd">        depth [m]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    z : array_like</span>
+<span class="sd">        height [m]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="o">-</span><span class="n">depth</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="z_from_p"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.conversions.z_from_p">[docs]</a><span class="k">def</span> <span class="nf">z_from_p</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">geo_strf_dyn_height</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates height from sea pressure using the computationally-efficient</span>
+<span class="sd">    48-term expression for density in terms of SA, CT and p (McDougall et</span>
+<span class="sd">    al., 2011).  Dynamic height anomaly, geo_strf_dyn_height, if provided, must</span>
+<span class="sd">    be computed with its pr=0 (the surface).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          latitude in decimal degrees north [-90..+90]</span>
+<span class="sd">    geo_strf_dyn_height : float, optional</span>
+<span class="sd">                          dynamic height anomaly [ m :sup:`2` s :sup:`-2` ]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    z : array_like</span>
+<span class="sd">        height [m]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; p = [10, 50, 125, 250, 600, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; lat = 4</span>
+<span class="sd">    &gt;&gt;&gt; gsw.z_from_p(p, lat)</span>
+<span class="sd">    array([  -9.94458313,  -49.71808883, -124.27262301, -248.47007032,</span>
+<span class="sd">           -595.82544461, -992.09217796])</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    At sea level z = 0, and since z (HEIGHT) is defined to be positive upwards,</span>
+<span class="sd">    it follows that while z is positive in the atmosphere, it is NEGATIVE in</span>
+<span class="sd">    the ocean.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in terms of Conservative Temperature, and related properties of seawater.</span>
+
+<span class="sd">    .. [3] Moritz (2000) Goedetic reference system 1980. J. Geodesy, 74,</span>
+<span class="sd">       128-133.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span>
+    <span class="n">sin2</span> <span class="o">=</span> <span class="n">X</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="mf">9.780327</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="p">(</span><span class="mf">5.2792e-3</span> <span class="o">+</span> <span class="p">(</span><span class="mf">2.32e-5</span> <span class="o">*</span> <span class="n">sin2</span><span class="p">))</span> <span class="o">*</span> <span class="n">sin2</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">B</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">enthalpy_SSO_0_p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">geo_strf_dyn_height</span>
+
+    <span class="k">return</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">C</span> <span class="o">/</span> <span class="p">(</span><span class="n">B</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">B</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="n">C</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

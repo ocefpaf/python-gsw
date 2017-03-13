@@ -1,0 +1,414 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.water_column_48 &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.water_column_48</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.earth</span> <span class="k">import</span> <span class="n">grav</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">db2Pascal</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span>
+<span class="kn">from</span> <span class="nn">.density_enthalpy_48</span> <span class="k">import</span> <span class="n">rho_alpha_beta</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;IPV_vs_fNsquared_ratio&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Nsquared&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Turner_Rsubrho&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="IPV_vs_fNsquared_ratio"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.water_column_48.IPV_vs_fNsquared_ratio">[docs]</a><span class="k">def</span> <span class="nf">IPV_vs_fNsquared_ratio</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">p_ref</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the ratio of the vertical gradient of potential density to</span>
+<span class="sd">    the vertical gradient of locally-referenced potential density.  This</span>
+<span class="sd">    ratio is also the ratio of the planetary Isopycnal Potential Vorticity</span>
+<span class="sd">    (IPV) to f times N^2, hence the name for this variable,</span>
+<span class="sd">    IPV_vs_fNsquared_ratio (see Eqn. (3.20.5) of IOC et al. (2010)).  The</span>
+<span class="sd">    reference sea pressure, p_ref, of the potential density surface must</span>
+<span class="sd">    have a constant value.</span>
+
+<span class="sd">    IPV_vs_fNsquared_ratio is evaluated at the mid pressure between the</span>
+<span class="sd">    individual data points in the vertical.  This function uses the</span>
+<span class="sd">    computationally-efficient 48-term expression for density in terms of</span>
+<span class="sd">    SA, CT and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+<span class="sd">    p_ref : int, float, optional</span>
+<span class="sd">         reference pressure, default = 0</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    IPV_vs_fNsquared_ratio : array_like</span>
+<span class="sd">         The ratio of the vertical gradient of potential density,</span>
+<span class="sd">         on the same (M-1)xN grid as p_mid. [unitless]</span>
+<span class="sd">         referenced to p_ref, to the vertical gradient of locally-</span>
+<span class="sd">         referenced potential density.</span>
+
+<span class="sd">    p_mid : array_like</span>
+<span class="sd">            Mid pressure between p grid [dbar]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The 48-term equation has been fitted in a restricted range of parameter</span>
+<span class="sd">    space, and is most accurate inside the &quot;oceanographic funnel&quot; described in</span>
+<span class="sd">    McDougall et al. (2011).  The GSW library function &quot;infunnel(SA, CT, p)&quot; is</span>
+<span class="sd">    available to be used if one wants to test if some of one&#39;s data lies</span>
+<span class="sd">    outside this &quot;funnel&quot;.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (3.20.5).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">p_ref</span><span class="p">))</span>
+
+    <span class="c1"># BUG</span>
+    <span class="c1"># if not np.isscalar(p_ref):</span>
+    <span class="c1">#     raise ValueError(&#39;The reference pressure p_ref must be unique&#39;)</span>
+
+    <span class="k">if</span> <span class="n">SA</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;There must be at least 2 columns.&#39;</span><span class="p">)</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">p_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">p_ref</span><span class="p">)</span>
+
+    <span class="n">p_ref</span> <span class="o">=</span> <span class="n">p_ref</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="n">p_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">])</span>
+    <span class="n">SA_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">SA</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">SA</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">])</span>
+    <span class="n">CT_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">CT</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">CT</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">])</span>
+
+    <span class="n">dSA</span> <span class="o">=</span> <span class="n">SA</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">-</span> <span class="n">SA</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">dCT</span> <span class="o">=</span> <span class="n">CT</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">-</span> <span class="n">CT</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="p">[</span><span class="n">dummy</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho_alpha_beta</span><span class="p">(</span><span class="n">SA_mid</span><span class="p">,</span> <span class="n">CT_mid</span><span class="p">,</span> <span class="n">p_mid</span><span class="p">)</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">rho_alpha_beta</span><span class="p">(</span><span class="n">SA_mid</span><span class="p">,</span> <span class="n">CT_mid</span><span class="p">,</span> <span class="n">p_mid</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">alpha_pref</span><span class="p">,</span> <span class="n">beta_pref</span> <span class="o">=</span> <span class="n">rho_alpha_beta</span><span class="p">(</span><span class="n">SA_mid</span><span class="p">,</span> <span class="n">CT_mid</span><span class="p">,</span> <span class="n">p_ref</span><span class="p">)</span>
+
+    <span class="c1"># This function calculates IPV_vs_fNsquared_ratio using the</span>
+    <span class="c1"># computationally efficient 48-term expression for density in terms of SA,</span>
+    <span class="c1"># CT and p.  If one wanted to compute this with the full TEOS-10 Gibbs</span>
+    <span class="c1"># function expression for density, the following lines of code will enable</span>
+    <span class="c1"># this.</span>
+    <span class="c1">#</span>
+    <span class="c1"># pt_mid = pt_from_CT(SA_mid, CT_mid)</span>
+    <span class="c1"># pr0 = np.zeros_like(SA_mid)</span>
+    <span class="c1"># t_mid = pt_from_t(SA_mid, pt_mid, pr0, p_mid)</span>
+    <span class="c1"># beta = beta_const_CT_t_exact(SA_mid, t_mid, p_mid)</span>
+    <span class="c1"># alpha = alpha_wrt_CT_t_exact(SA_mid, t_mid, p_mid)</span>
+    <span class="c1"># beta_pref = beta_const_CT_t_exact(SA_mid, t_mid, p_ref)</span>
+    <span class="c1"># alpha_pref = alpha_wrt_CT_t_exact(SA_mid, t_mid, p_ref)</span>
+
+    <span class="n">numerator</span> <span class="o">=</span> <span class="n">dCT</span> <span class="o">*</span> <span class="n">alpha_pref</span> <span class="o">-</span> <span class="n">dSA</span> <span class="o">*</span> <span class="n">beta_pref</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">dCT</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">-</span> <span class="n">dSA</span> <span class="o">*</span> <span class="n">beta</span>
+
+    <span class="c1"># IPV_vs_fNsquared_ratio = np.zeros_like(SA_mid) * np.NaN</span>
+    <span class="c1"># I = denominator != 0.</span>
+    <span class="c1"># IPV_vs_fNsquared_ratio[I] = numerator[I] / denominator[I]</span>
+
+    <span class="n">IPV_vs_fNsquared_ratio</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+
+    <span class="k">return</span> <span class="n">IPV_vs_fNsquared_ratio</span><span class="p">,</span> <span class="n">p_mid</span></div>
+
+
+<span class="c1"># In the following, we are assuming the p dimension comes</span>
+<span class="c1"># first.  This follows the matlab code, (Fortran order)</span>
+<span class="c1"># but is unnatural in Python (C order).</span>
+<span class="c1"># We might need to deal with this in a better way.</span>
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="Nsquared"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.water_column_48.Nsquared">[docs]</a><span class="k">def</span> <span class="nf">Nsquared</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the buoyancy frequency squared (N^2)</span>
+<span class="sd">    (i.e. the Brunt-Väisälä frequency squared) at the</span>
+<span class="sd">    mid pressure from the equation::</span>
+
+<span class="sd">           2      2             beta.d(SA) - alpha.d(CT)</span>
+<span class="sd">         N   =  g   rho_local   ------------------------</span>
+<span class="sd">                                          dP</span>
+
+<span class="sd">    dP in the above formula is in Pascals</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+<span class="sd">    lat : array_like, optional</span>
+<span class="sd">          latitude in decimal degrees north [-90..+90]</span>
+<span class="sd">          If lat is not supplied, a default gravitational acceleration of</span>
+<span class="sd">          9.7963 m/s^2 (Griffies, 2004) will be used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    N2 : array_like</span>
+<span class="sd">         Brunt-Väisälä frequency squared [1 s :math:`-2`]</span>
+<span class="sd">    p_mid : array_like</span>
+<span class="sd">            Mid pressure between p grid [dbar]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This routine uses rho from the computationally efficient 48-term expression</span>
+<span class="sd">    for density in terms of SA, CT and p.</span>
+
+<span class="sd">    The 48-term equation has been fitted in a restricted range of parameter</span>
+<span class="sd">    space, and is most accurate inside the &quot;oceanographic funnel&quot; described in</span>
+<span class="sd">    IOC et al. (2010).  The GSW library function &quot;infunnel(SA, CT, p)&quot; is</span>
+<span class="sd">    available to be used if one wants to test if some of one&#39;s data lies</span>
+<span class="sd">    outside this &quot;funnel&quot;.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.10 and Eqn. (3.10.2).</span>
+
+<span class="sd">    .. [2] Griffies, S. M., 2004: Fundamentals of Ocean Climate Models.</span>
+<span class="sd">       Princeton, NJ: Princeton University Press, 518 pp + xxxiv.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">lat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">grav</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="mf">9.7963</span>  <span class="c1"># Standard value from Griffies (2004).</span>
+        <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="n">ishallow</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="bp">Ellipsis</span><span class="p">)</span>
+    <span class="n">ideep</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="bp">Ellipsis</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">mid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">ideep</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">ishallow</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">delta</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">ideep</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">ishallow</span><span class="p">]</span>
+
+    <span class="nb">vars</span> <span class="o">=</span> <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span>
+    <span class="n">SA_mid</span><span class="p">,</span> <span class="n">CT_mid</span><span class="p">,</span> <span class="n">p_mid</span> <span class="o">=</span> <span class="p">[</span><span class="n">mid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span>
+    <span class="n">dSA</span><span class="p">,</span> <span class="n">dCT</span><span class="p">,</span> <span class="n">dp</span> <span class="o">=</span> <span class="p">[</span><span class="n">delta</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span>
+
+    <span class="n">rho_mid</span><span class="p">,</span> <span class="n">alpha_mid</span><span class="p">,</span> <span class="n">beta_mid</span> <span class="o">=</span> <span class="n">rho_alpha_beta</span><span class="p">(</span><span class="n">SA_mid</span><span class="p">,</span> <span class="n">CT_mid</span><span class="p">,</span> <span class="n">p_mid</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">grav_mid</span> <span class="o">=</span> <span class="n">mid</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">grav_mid</span> <span class="o">=</span> <span class="n">g</span>
+
+    <span class="n">N2</span> <span class="o">=</span> <span class="p">(</span><span class="n">grav_mid</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">db2Pascal</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">rho_mid</span> <span class="o">/</span> <span class="n">dp</span><span class="p">)</span>
+    <span class="n">N2</span> <span class="o">*=</span> <span class="p">(</span><span class="n">beta_mid</span> <span class="o">*</span> <span class="n">dSA</span> <span class="o">-</span> <span class="n">alpha_mid</span> <span class="o">*</span> <span class="n">dCT</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">N2</span><span class="p">,</span> <span class="n">p_mid</span></div>
+
+
+<div class="viewcode-block" id="Turner_Rsubrho"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.water_column_48.Turner_Rsubrho">[docs]</a><span class="k">def</span> <span class="nf">Turner_Rsubrho</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Turner angle and the Rsubrho as a function of pressure</span>
+<span class="sd">    down a vertical water column.  These quantities express the relative</span>
+<span class="sd">    contributions of the vertical gradients of Conservative Temperature and</span>
+<span class="sd">    Absolute Salinity to the vertical stability (the square of the</span>
+<span class="sd">    Brunt-Väisälä Frequency squared, N^2).  `Tu` and `Rsubrho` are evaluated at</span>
+<span class="sd">    the mid pressure between the individual data points in the vertical.  This</span>
+<span class="sd">    function uses computationally-efficient 48-term expression for density in</span>
+<span class="sd">    terms of SA, CT and p (McDougall et al., 2011).  Note that in the</span>
+<span class="sd">    double-diffusive literature, papers concerned with the &quot;diffusive&quot; form of</span>
+<span class="sd">    double-diffusive convection often define the stability ratio as the</span>
+<span class="sd">    reciprocal of what is defined here as the stability ratio.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure  [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tu : array_like</span>
+<span class="sd">         Turner angle, on the same (M-1)xN grid as p_mid. [degrees of rotation]</span>
+<span class="sd">    Rsubrho : array_like</span>
+<span class="sd">              Stability Ratio, on the same (M-1)xN grid as p_mid. [unitless]</span>
+<span class="sd">    p_mid : array_like</span>
+<span class="sd">            Mid pressure between p grid [dbar]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The 48-term equation has been fitted in a restricted range of parameter</span>
+<span class="sd">    space, and is most accurate inside the &quot;oceanographic funnel&quot; described in</span>
+<span class="sd">    McDougall et al. (2011).  The GSW library function &quot;infunnel(SA, CT, p)&quot; is</span>
+<span class="sd">    available to be used if one wants to test if some of one&#39;s data lies</span>
+<span class="sd">    outside this &quot;funnel&quot;.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (3.15.1) and (3.16.1).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">SA</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;There must be at least 2 columns.&#39;</span><span class="p">)</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="n">p_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">])</span>
+    <span class="n">SA_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">SA</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">SA</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">])</span>
+    <span class="n">CT_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">CT</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">CT</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">])</span>
+
+    <span class="n">dSA</span> <span class="o">=</span> <span class="n">SA</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">-</span> <span class="n">SA</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">dCT</span> <span class="o">=</span> <span class="n">CT</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">-</span> <span class="n">CT</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="p">[</span><span class="n">dummy</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho_alpha_beta</span><span class="p">(</span><span class="n">SA_mid</span><span class="p">,</span> <span class="n">CT_mid</span><span class="p">,</span> <span class="n">p_mid</span><span class="p">)</span>
+
+    <span class="c1"># This function evaluates Tu and Rsubrho using the computationally</span>
+    <span class="c1"># efficient 48-term expression for density in terms of SA, CT and p. If one</span>
+    <span class="c1"># wanted to compute Tu and Rsubrho using the full TEOS-10 Gibbs function</span>
+    <span class="c1"># expression for density, the following lines of code would do that.</span>
+    <span class="c1">#</span>
+    <span class="c1"># pt_mid = pt_from_CT(SA_mid, CT_mid)</span>
+    <span class="c1"># pr0 = np.zeros_like(SA_mid)</span>
+    <span class="c1"># t_mid = pt_from_t(SA_mid, pt_mid, pr0, p_mid)</span>
+    <span class="c1"># beta = beta_const_CT_t_exact(SA_mid, t_mid, p_mid)</span>
+    <span class="c1"># alpha = alpha_wrt_CT_t_exact(SA_mid, t_mid, p_mid)</span>
+
+    <span class="n">Tu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">((</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">dCT</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">dSA</span><span class="p">),</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">dCT</span> <span class="o">-</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">dSA</span><span class="p">))</span>
+
+    <span class="n">Tu</span> <span class="o">=</span> <span class="n">Tu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="n">Rsubrho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">dSA</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+    <span class="n">Inz</span> <span class="o">=</span> <span class="n">dSA</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="n">Rsubrho</span><span class="p">[</span><span class="n">Inz</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">alpha</span><span class="p">[</span><span class="n">Inz</span><span class="p">]</span> <span class="o">*</span> <span class="n">dCT</span><span class="p">[</span><span class="n">Inz</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span><span class="p">[</span><span class="n">Inz</span><span class="p">]</span> <span class="o">*</span> <span class="n">dSA</span><span class="p">[</span><span class="n">Inz</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">Tu</span><span class="p">,</span> <span class="n">Rsubrho</span><span class="p">,</span> <span class="n">p_mid</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

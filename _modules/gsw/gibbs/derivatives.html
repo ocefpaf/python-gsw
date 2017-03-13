@@ -1,0 +1,696 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.derivatives &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.derivatives</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.library</span> <span class="k">import</span> <span class="n">gibbs</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">Kelvin</span><span class="p">,</span> <span class="n">cp0</span><span class="p">,</span> <span class="n">sfac</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span>
+<span class="kn">from</span> <span class="nn">.conversions</span> <span class="k">import</span> <span class="n">pt_from_CT</span><span class="p">,</span> <span class="n">pt_from_t</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CT_first_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CT_second_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;enthalpy_first_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;enthalpy_second_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;entropy_first_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;entropy_second_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pt_first_derivatives&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pt_second_derivatives&#39;</span><span class="p">]</span>
+
+<span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="CT_first_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.CT_first_derivatives">[docs]</a><span class="k">def</span> <span class="nf">CT_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following two derivatives of Conservative Temperature</span>
+<span class="sd">    (1) CT_SA, the derivative with respect to Absolute Salinity at constant</span>
+<span class="sd">        potential temperature (with pr = 0 dbar), and</span>
+<span class="sd">    (2) CT_pt, the derivative with respect to potential temperature (the</span>
+<span class="sd">        regular potential temperature which is referenced to 0 dbar) at</span>
+<span class="sd">        constant Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature referenced to a sea pressure of zero dbar</span>
+<span class="sd">         [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT_SA : array_like</span>
+<span class="sd">            The derivative of CT with respect to SA at constant potential</span>
+<span class="sd">            temperature reference sea pressure of 0 dbar.</span>
+<span class="sd">            [K (g kg :sup:`-1`) :sup:`-1`]</span>
+
+<span class="sd">    CT_pt : array_like</span>
+<span class="sd">            The derivative of CT with respect to pt at constant SA.</span>
+<span class="sd">            [ unitless ]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = 34.7118</span>
+<span class="sd">    &gt;&gt;&gt; pt = 28.7832</span>
+<span class="sd">    &gt;&gt;&gt; gsw.CT_first_derivatives(SA, pt)</span>
+<span class="sd">    (-0.041981092877805957, 1.0028149372966355)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (A.12.3) and (A.12.9a,b).</span>
+
+<span class="sd">    .. [2] McDougall T. J., D. R. Jackett, P. M. Barker, C. Roberts-Thomson, R.</span>
+<span class="sd">       Feistel and R. W. Hallberg, 2010:  A computationally efficient 25-term</span>
+<span class="sd">       expression for the density of seawater in terms of Conservative</span>
+<span class="sd">       Temperature, and related properties of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># FIXME: Matlab version 3.0 has a copy-and-paste of the gibbs function here</span>
+    <span class="c1"># instead of a call. Why?</span>
+
+    <span class="n">abs_pt</span> <span class="o">=</span> <span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span>
+
+    <span class="n">CT_pt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">abs_pt</span> <span class="o">*</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">cp0</span>
+
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">sfac</span> <span class="o">*</span> <span class="n">SA</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+    <span class="n">y_pt</span> <span class="o">=</span> <span class="mf">0.025</span> <span class="o">*</span> <span class="n">pt</span>
+
+    <span class="n">g_SA_T_mod</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1187.3715515697959</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1480.222530425046</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span>
+                  <span class="p">(</span><span class="mf">2175.341332000392</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">980.14153344888</span> <span class="o">+</span>
+                  <span class="mf">220.542973797483</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">548.4580073635929</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                  <span class="p">(</span><span class="mf">592.4012338275047</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">274.2361238716608</span> <span class="o">+</span>
+                  <span class="mf">49.9394019139016</span> <span class="o">*</span> <span class="n">y_pt</span><span class="p">))))</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">258.3988055868252</span> <span class="o">+</span>
+                  <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">90.2046337756875</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="mf">10.50720794170734</span><span class="p">)))</span> <span class="o">+</span>
+                  <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3520.125411988816</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1351.605895580406</span> <span class="o">+</span>
+                  <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="mf">731.4083582010072</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">216.60324087531103</span> <span class="o">+</span>
+                  <span class="mf">25.56203650166196</span> <span class="o">*</span> <span class="n">y_pt</span><span class="p">)))))</span>
+
+    <span class="n">g_SA_T_mod</span> <span class="o">*=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sfac</span> <span class="o">*</span> <span class="mf">0.025</span>
+
+    <span class="n">g_SA_mod</span> <span class="o">=</span> <span class="p">(</span><span class="mf">8645.36753595126</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">7296.43987145382</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span>
+                <span class="p">(</span><span class="mf">8103.20462414788</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2175.341332000392</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                <span class="p">(</span><span class="o">-</span><span class="mf">274.2290036817964</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="mf">197.4670779425016</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                <span class="p">(</span><span class="o">-</span><span class="mf">68.5590309679152</span> <span class="o">+</span> <span class="mf">9.98788038278032</span> <span class="o">*</span> <span class="n">y_pt</span><span class="p">))))</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span>
+                <span class="p">(</span><span class="o">-</span><span class="mf">5458.34205214835</span> <span class="o">-</span> <span class="mf">980.14153344888</span> <span class="o">*</span> <span class="n">y_pt</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span>
+                <span class="p">(</span><span class="mf">2247.60742726704</span> <span class="o">-</span> <span class="mf">340.1237483177863</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">220.542973797483</span> <span class="o">*</span>
+                <span class="n">y_pt</span><span class="p">)))</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1480.222530425046</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                <span class="p">(</span><span class="o">-</span><span class="mf">129.1994027934126</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">30.0682112585625</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                <span class="p">(</span><span class="mf">2.626801985426835</span><span class="p">)))))</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1187.3715515697959</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                <span class="p">(</span><span class="mf">1760.062705994408</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">450.535298526802</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span>
+                <span class="p">(</span><span class="mf">182.8520895502518</span> <span class="o">+</span> <span class="n">y_pt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">43.3206481750622</span> <span class="o">+</span>
+                <span class="mf">4.26033941694366</span> <span class="o">*</span> <span class="n">y_pt</span><span class="p">))))))</span>
+
+    <span class="n">g_SA_mod</span> <span class="o">*=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sfac</span>
+
+    <span class="n">CT_SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">g_SA_mod</span> <span class="o">-</span> <span class="n">abs_pt</span> <span class="o">*</span> <span class="n">g_SA_T_mod</span><span class="p">)</span> <span class="o">/</span> <span class="n">cp0</span>
+
+    <span class="k">return</span> <span class="n">CT_SA</span><span class="p">,</span> <span class="n">CT_pt</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="CT_second_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.CT_second_derivatives">[docs]</a><span class="k">def</span> <span class="nf">CT_second_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following three, second-order derivatives of Conservative</span>
+<span class="sd">    Temperature</span>
+<span class="sd">    (1) CT_SA_SA, the second derivative with respect to Absolute Salinity at</span>
+<span class="sd">        constant potential temperature (with p_ref = 0 dbar),</span>
+<span class="sd">    (2) CT_SA_pt, the derivative with respect to potential temperature (the</span>
+<span class="sd">        regular potential temperature which is referenced to 0 dbar) and</span>
+<span class="sd">        Absolute Salinity, and</span>
+<span class="sd">    (3) CT_pt_pt, the second derivative with respect to potential temperature</span>
+<span class="sd">        (the regular potential temperature which is referenced to 0 dbar) at</span>
+<span class="sd">        constant Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    pt : array_like</span>
+<span class="sd">         potential temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT_SA_SA : array_like</span>
+<span class="sd">               The second derivative of Conservative Temperature with respect</span>
+<span class="sd">               to Absolute Salinity at constant potential temperature (the</span>
+<span class="sd">               regular potential temperature which has reference sea pressure</span>
+<span class="sd">               of 0 dbar). [K/((g/kg)^2)]</span>
+<span class="sd">    CT_SA_pt : array_like</span>
+<span class="sd">               The derivative of Conservative Temperature with respect to</span>
+<span class="sd">               potential temperature (the regular one with p_ref = 0 dbar) and</span>
+<span class="sd">               Absolute Salinity. [1/(g/kg)]</span>
+<span class="sd">    CT_pt_pt : array_like</span>
+<span class="sd">               The second derivative of Conservative Temperature with respect</span>
+<span class="sd">               to potential temperature (the regular one with p_ref = 0 dbar)</span>
+<span class="sd">               at constant SA. [1/K]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See appendix A.12.</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011: A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in terms of Conservative Temperature, and related properties of</span>
+<span class="sd">       seawater.  To be submitted to Ocean Science Discussions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dSA</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">SA_l</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">-</span> <span class="n">dSA</span>
+    <span class="n">SA_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA_l</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">SA_u</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">+</span> <span class="n">dSA</span>
+
+    <span class="n">CT_SA_l</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">CT_first_derivatives</span><span class="p">(</span><span class="n">SA_l</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+    <span class="n">CT_SA_u</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">CT_first_derivatives</span><span class="p">(</span><span class="n">SA_u</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+
+    <span class="n">CT_SA_SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">SA</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="n">CT_SA_SA</span><span class="p">[</span><span class="n">SA_u</span> <span class="o">!=</span> <span class="n">SA_l</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">CT_SA_u</span><span class="p">[</span><span class="n">SA_u</span> <span class="o">!=</span> <span class="n">SA_l</span><span class="p">]</span> <span class="o">-</span> <span class="n">CT_SA_l</span><span class="p">[</span><span class="n">SA_u</span> <span class="o">!=</span> <span class="n">SA_l</span><span class="p">])</span> <span class="o">/</span>
+                              <span class="p">(</span><span class="n">SA_u</span><span class="p">[</span><span class="n">SA_u</span> <span class="o">!=</span> <span class="n">SA_l</span><span class="p">]</span> <span class="o">-</span> <span class="n">SA_l</span><span class="p">[</span><span class="n">SA_u</span> <span class="o">!=</span> <span class="n">SA_l</span><span class="p">]))</span>
+
+    <span class="c1"># Increment of potential temperature is 0.01 degrees C.</span>
+    <span class="n">dpt</span> <span class="o">=</span> <span class="mf">1e-2</span>
+    <span class="n">pt_l</span> <span class="o">=</span> <span class="n">pt</span> <span class="o">-</span> <span class="n">dpt</span>
+    <span class="n">pt_u</span> <span class="o">=</span> <span class="n">pt</span> <span class="o">+</span> <span class="n">dpt</span>
+
+    <span class="n">CT_SA_l</span><span class="p">,</span> <span class="n">CT_pt_l</span> <span class="o">=</span> <span class="n">CT_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt_l</span><span class="p">)</span>
+    <span class="n">CT_SA_u</span><span class="p">,</span> <span class="n">CT_pt_u</span> <span class="o">=</span> <span class="n">CT_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt_u</span><span class="p">)</span>
+
+    <span class="n">CT_SA_pt</span> <span class="o">=</span> <span class="p">(</span><span class="n">CT_SA_u</span> <span class="o">-</span> <span class="n">CT_SA_l</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">pt_u</span> <span class="o">-</span> <span class="n">pt_l</span><span class="p">)</span>
+    <span class="n">CT_pt_pt</span> <span class="o">=</span> <span class="p">(</span><span class="n">CT_pt_u</span> <span class="o">-</span> <span class="n">CT_pt_l</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">pt_u</span> <span class="o">-</span> <span class="n">pt_l</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CT_SA_SA</span><span class="p">,</span> <span class="n">CT_SA_pt</span><span class="p">,</span> <span class="n">CT_pt_pt</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="enthalpy_first_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.enthalpy_first_derivatives">[docs]</a><span class="k">def</span> <span class="nf">enthalpy_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following three derivatives of specific enthalpy (h)</span>
+<span class="sd">    (1) h_SA, the derivative with respect to Absolute Salinity at</span>
+<span class="sd">        constant CT and p, and</span>
+<span class="sd">    (2) h_CT, derivative with respect to CT at constant SA and p.</span>
+<span class="sd">    (3) h_P, derivative with respect to pressure (in Pa) at constant SA and CT.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    h_SA : array_like</span>
+<span class="sd">           The first derivative of specific enthalpy with respect to Absolute</span>
+<span class="sd">           Salinity at constant CT and p. [J/(kg (g/kg))]  i.e. [J/g]</span>
+<span class="sd">    h_CT : array_like</span>
+<span class="sd">           The first derivative of specific enthalpy with respect to CT at</span>
+<span class="sd">           constant SA and p. [J/(kg K)]</span>
+<span class="sd">    h_P : array_like</span>
+<span class="sd">          The first partial derivative of specific enthalpy with respect to</span>
+<span class="sd">          pressure (in Pa) at fixed SA and CT.  Note that h_P is specific</span>
+<span class="sd">          volume (1/rho.)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (A.11.18), (A.11.15) and (A.11.12.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># FIXME: The gsw 3.0 has the gibbs derivatives &quot;copy-and-pasted&quot; here</span>
+    <span class="c1"># instead of the calls to the library! Why?</span>
+
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">pt_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">temp_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">enthalpy_derivative_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span>
+                <span class="n">temp_ratio</span> <span class="o">*</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">enthalpy_derivative_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cp0</span> <span class="o">*</span> <span class="n">temp_ratio</span>
+
+    <span class="k">def</span> <span class="nf">enthalpy_derivative_p</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">enthalpy_derivative_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span>
+            <span class="n">enthalpy_derivative_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span>
+            <span class="n">enthalpy_derivative_p</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">),)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="enthalpy_second_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.enthalpy_second_derivatives">[docs]</a><span class="k">def</span> <span class="nf">enthalpy_second_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following three second-order derivatives of specific</span>
+<span class="sd">    enthalpy (h)</span>
+<span class="sd">    (1) h_SA_SA, second-order derivative with respect to Absolute Salinity</span>
+<span class="sd">        at constant CT &amp; p.</span>
+<span class="sd">    (2) h_SA_CT, second-order derivative with respect to SA &amp; CT at</span>
+<span class="sd">        constant p.</span>
+<span class="sd">    (3) h_CT_CT, second-order derivative with respect to CT at constant SA</span>
+<span class="sd">        and p.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    h_SA_SA : array_like</span>
+<span class="sd">              The second derivative of specific enthalpy with respect to</span>
+<span class="sd">              Absolute Salinity at constant CT &amp; p. [J/(kg (g/kg)^2)]</span>
+<span class="sd">    h_SA_CT : array_like</span>
+<span class="sd">              The second derivative of specific enthalpy with respect to SA and</span>
+<span class="sd">              CT at constant p. [J/(kg K(g/kg))]</span>
+<span class="sd">    h_CT_CT : array_like</span>
+<span class="sd">              The second derivative of specific enthalpy with respect to CT at</span>
+<span class="sd">              constant SA and p. [J/(kg K^2)]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (A.11.18), (A.11.15) and (A.11.12.)</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in terms of Conservative Temperature, and related properties of</span>
+<span class="sd">       seawater.  To be submitted to Ocean Science Discussions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># NOTE: The Matlab version 3.0 mentions that this function is unchanged,</span>
+    <span class="c1"># but that&#39;s not true!</span>
+
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">abs_pt0</span> <span class="o">=</span> <span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt0</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">pt_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">temp_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="n">abs_pt0</span>
+
+    <span class="n">rec_gTT_pt0</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">rec_gTT_t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">gST_pt0</span> <span class="o">=</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">gST_t</span> <span class="o">=</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">gS_pt0</span> <span class="o">=</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">part</span> <span class="o">=</span> <span class="p">((</span><span class="n">temp_ratio</span> <span class="o">*</span> <span class="n">gST_pt0</span> <span class="o">*</span> <span class="n">rec_gTT_pt0</span> <span class="o">-</span> <span class="n">gST_t</span> <span class="o">*</span> <span class="n">rec_gTT_t</span><span class="p">)</span> <span class="o">/</span>
+            <span class="p">(</span><span class="n">abs_pt0</span><span class="p">))</span>
+
+    <span class="n">factor</span> <span class="o">=</span> <span class="n">gS_pt0</span> <span class="o">/</span> <span class="n">cp0</span>
+
+    <span class="c1"># h_CT_CT is naturally well-behaved as SA approaches zero.</span>
+    <span class="k">def</span> <span class="nf">enthalpy_derivative_CT_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">cp0</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">((</span><span class="n">temp_ratio</span> <span class="o">*</span> <span class="n">rec_gTT_pt0</span> <span class="o">-</span> <span class="n">rec_gTT_t</span><span class="p">)</span> <span class="o">/</span>
+                            <span class="p">(</span><span class="n">abs_pt0</span> <span class="o">*</span> <span class="n">abs_pt0</span><span class="p">)))</span>
+
+    <span class="c1"># h_SA_SA has a singularity at SA = 0, and blows up as SA approaches zero.</span>
+    <span class="k">def</span> <span class="nf">enthalpy_derivative_SA_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="n">SA</span><span class="p">[</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mf">1e-100</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-100</span>  <span class="c1"># NOTE: Here is the changes from 2.0 to 3.0.</span>
+        <span class="n">h_CT_CT</span> <span class="o">=</span> <span class="n">enthalpy_derivative_CT_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span>
+                <span class="n">temp_ratio</span> <span class="o">*</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span>
+                <span class="n">temp_ratio</span> <span class="o">*</span> <span class="n">gST_pt0</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rec_gTT_pt0</span> <span class="o">-</span>
+                <span class="n">gST_t</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rec_gTT_t</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">gS_pt0</span> <span class="o">*</span> <span class="n">part</span> <span class="o">+</span>
+                <span class="n">factor</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">h_CT_CT</span><span class="p">)</span>
+
+    <span class="c1"># h_SA_CT should not blow up as SA approaches zero. The following lines of</span>
+    <span class="c1"># code ensure that the h_SA_CT output of this function does not blow up in</span>
+    <span class="c1"># this limit.  That is, when SA &lt; 1e-100 g/kg, we force the h_SA_CT output</span>
+    <span class="c1"># to be the same as if SA = 1e-100 g/kg.</span>
+
+    <span class="k">def</span> <span class="nf">enthalpy_derivative_SA_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="n">h_CT_CT</span> <span class="o">=</span> <span class="n">enthalpy_derivative_CT_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cp0</span> <span class="o">*</span> <span class="n">part</span> <span class="o">-</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">h_CT_CT</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">enthalpy_derivative_SA_SA</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span>
+            <span class="n">enthalpy_derivative_SA_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span>
+            <span class="n">enthalpy_derivative_CT_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="entropy_first_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.entropy_first_derivatives">[docs]</a><span class="k">def</span> <span class="nf">entropy_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following two partial derivatives of specific entropy</span>
+<span class="sd">    (eta)</span>
+<span class="sd">    (1) eta_SA, the derivative with respect to Absolute Salinity at constant</span>
+<span class="sd">        Conservative Temperature, and</span>
+<span class="sd">    (2) eta_CT, the derivative with respect to Conservative Temperature at</span>
+<span class="sd">        constant Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    eta_SA : array_like</span>
+<span class="sd">             The derivative of specific entropy with respect to SA at constant</span>
+<span class="sd">             CT [J g :sup:`-1` K :sup:`-1`]</span>
+<span class="sd">    eta_CT : array_like</span>
+<span class="sd">             The derivative of specific entropy with respect to CT at constant</span>
+<span class="sd">             SA [ J (kg K :sup:`-2`) :sup:`-1` ]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = 34.7118</span>
+<span class="sd">    &gt;&gt;&gt; CT = 28.8099</span>
+<span class="sd">    &gt;&gt;&gt; gsw.entropy_first_derivatives(SA, CT)</span>
+<span class="sd">    (-0.26328680071165517, 13.221031210083824)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (A.12.8) and (P.14a,c).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+
+    <span class="n">eta_SA</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span><span class="p">)</span>
+    <span class="n">eta_CT</span> <span class="o">=</span> <span class="n">cp0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eta_SA</span><span class="p">,</span> <span class="n">eta_CT</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="entropy_second_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.entropy_second_derivatives">[docs]</a><span class="k">def</span> <span class="nf">entropy_second_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following three second-order partial derivatives of</span>
+<span class="sd">    specific entropy (eta)</span>
+<span class="sd">    (1) eta_SA_SA, the second derivative with respect to Absolute Salinity at</span>
+<span class="sd">        constant Conservative Temperature, and</span>
+<span class="sd">    (2) eta_SA_CT, the derivative with respect to Absolute Salinity and</span>
+<span class="sd">        Conservative Temperature.</span>
+<span class="sd">    (3) eta_CT_CT, the second derivative with respect to Conservative</span>
+<span class="sd">        Temperature at constant Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    eta_SA_SA : array_like</span>
+<span class="sd">                The second derivative of specific entropy with respect to SA at</span>
+<span class="sd">                constant CT [J (kg K (g kg :sup:`-1` ) :sup:`2`) :sup:`-1`]</span>
+<span class="sd">    eta_SA_CT : array_like</span>
+<span class="sd">                The second derivative of specific entropy with respect to</span>
+<span class="sd">                SA and CT [J (kg (g kg :sup:`-1` ) K :sup:`2`) :sup:`-1` ]</span>
+<span class="sd">    eta_CT_CT : array_like</span>
+<span class="sd">                The second derivative of specific entropy with respect to CT at</span>
+<span class="sd">                constant SA [J (kg K :sup:`3`) :sup:`-1` ]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; SA = 34.7118</span>
+<span class="sd">    &gt;&gt;&gt; CT = 28.8099</span>
+<span class="sd">    &gt;&gt;&gt; gsw.entropy_second_derivatives(SA, CT)</span>
+<span class="sd">    (-0.0076277189296690626, -0.0018331042167510211, -0.043665023731108685)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (P.14b) and (P.15a,b).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">abs_pt</span> <span class="o">=</span> <span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span>
+
+    <span class="n">CT_SA</span> <span class="o">=</span> <span class="p">((</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span>
+             <span class="p">(</span><span class="n">abs_pt</span> <span class="o">*</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span> <span class="o">/</span> <span class="n">cp0</span><span class="p">)</span>
+
+    <span class="n">CT_pt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">abs_pt</span> <span class="o">*</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">cp0</span>
+
+    <span class="n">eta_CT_CT</span> <span class="o">=</span> <span class="o">-</span> <span class="n">cp0</span> <span class="o">/</span> <span class="p">(</span><span class="n">CT_pt</span> <span class="o">*</span> <span class="n">abs_pt</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">eta_SA_CT</span> <span class="o">=</span> <span class="o">-</span> <span class="n">CT_SA</span> <span class="o">*</span> <span class="n">eta_CT_CT</span>
+
+    <span class="n">eta_SA_SA</span> <span class="o">=</span> <span class="o">-</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">abs_pt</span> <span class="o">-</span> <span class="n">CT_SA</span> <span class="o">*</span> <span class="n">eta_SA_CT</span>
+
+    <span class="k">return</span> <span class="n">eta_SA_SA</span><span class="p">,</span> <span class="n">eta_SA_CT</span><span class="p">,</span> <span class="n">eta_CT_CT</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pt_first_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.pt_first_derivatives">[docs]</a><span class="k">def</span> <span class="nf">pt_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following two partial derivatives of potential</span>
+<span class="sd">    temperature (the regular potential temperature whose reference sea</span>
+<span class="sd">    pressure is 0 dbar)</span>
+<span class="sd">    (1) pt_SA, the derivative with respect to Absolute Salinity at</span>
+<span class="sd">        constant Conservative Temperature, and</span>
+<span class="sd">    (2) pt_CT, the derivative with respect to Conservative Temperature at</span>
+<span class="sd">        constant Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pt_SA : array_like</span>
+<span class="sd">            The derivative of potential temperature with respect to Absolute</span>
+<span class="sd">            Salinity at constant Conservative Temperature. [K/(g/kg)]</span>
+<span class="sd">    pt_CT : array_like</span>
+<span class="sd">            The derivative of potential temperature with respect to</span>
+<span class="sd">            Conservative Temperature at constant Absolute Salinity. [unitless]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (A.12.6), (A.12.3), (P.6) and (P.8).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011: A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in terms of Conservative Temperature, and related properties of</span>
+<span class="sd">       seawater.  To be submitted to Ocean Science Discussions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">abs_pt</span> <span class="o">=</span> <span class="n">Kelvin</span> <span class="o">+</span> <span class="n">pt</span>
+
+    <span class="n">CT_SA</span> <span class="o">=</span> <span class="p">((</span><span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">abs_pt</span> <span class="o">*</span>
+              <span class="n">gibbs</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">cp0</span><span class="p">)</span>
+
+    <span class="n">CT_pt</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">abs_pt</span> <span class="o">*</span> <span class="n">gibbs</span><span class="p">(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">cp0</span>
+
+    <span class="n">pt_SA</span> <span class="o">=</span> <span class="o">-</span> <span class="n">CT_SA</span> <span class="o">/</span> <span class="n">CT_pt</span>
+
+    <span class="n">pt_CT</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">CT_pt</span>
+
+    <span class="k">return</span> <span class="n">pt_SA</span><span class="p">,</span> <span class="n">pt_CT</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="pt_second_derivatives"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.derivatives.pt_second_derivatives">[docs]</a><span class="k">def</span> <span class="nf">pt_second_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the following three second-order derivatives of potential</span>
+<span class="sd">    temperature (the regular potential temperature which has a reference</span>
+<span class="sd">    sea pressure of 0 dbar),</span>
+<span class="sd">    (1) pt_SA_SA, the second derivative with respect to Absolute Salinity at</span>
+<span class="sd">        constant Conservative Temperature,</span>
+<span class="sd">    (2) pt_SA_CT, the derivative with respect to Conservative Temperature and</span>
+<span class="sd">        Absolute Salinity, and</span>
+<span class="sd">    (3) pt_CT_CT, the second derivative with respect to Conservative</span>
+<span class="sd">        Temperature at constant Absolute Salinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pt_SA_SA : array_like</span>
+<span class="sd">               The second derivative of potential temperature (the regular</span>
+<span class="sd">               potential temperature which has reference sea pressure of 0</span>
+<span class="sd">               dbar) with respect to Absolute Salinity at constant Conservative</span>
+<span class="sd">               Temperature. [K/((g/kg)^2)]</span>
+<span class="sd">    pt_SA_CT : array_like</span>
+<span class="sd">               The derivative of potential temperature with respect to Absolute</span>
+<span class="sd">               Salinity and Conservative Temperature. [1/(g/kg)]</span>
+<span class="sd">    pt_CT_CT : array_like</span>
+<span class="sd">               The second derivative of potential temperature (the regular one</span>
+<span class="sd">               with p_ref = 0 dbar) with respect to Conservative Temperature at</span>
+<span class="sd">               constant SA. [1/K]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns. (A.12.9) and (A.12.10).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011: A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of seawater</span>
+<span class="sd">       in</span>
+<span class="sd">       terms of Conservative Temperature, and related properties of seawater.</span>
+<span class="sd">       To be submitted to Ocean Science Discussions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Increment of Absolute Salinity is 0.001 g/kg.</span>
+    <span class="n">dSA</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">SA_l</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">-</span> <span class="n">dSA</span>
+    <span class="n">SA_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">SA_l</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">SA_u</span> <span class="o">=</span> <span class="n">SA</span> <span class="o">+</span> <span class="n">dSA</span>
+    <span class="n">pt_SA_l</span><span class="p">,</span> <span class="n">pt_CT_l</span> <span class="o">=</span> <span class="n">pt_first_derivatives</span><span class="p">(</span><span class="n">SA_l</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">pt_SA_u</span><span class="p">,</span> <span class="n">pt_CT_u</span> <span class="o">=</span> <span class="n">pt_first_derivatives</span><span class="p">(</span><span class="n">SA_u</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="n">pt_SA_SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">pt_SA_u</span> <span class="o">-</span> <span class="n">pt_SA_l</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">SA_u</span> <span class="o">-</span> <span class="n">SA_l</span><span class="p">)</span>
+    <span class="c1"># Can calculate this either way.</span>
+    <span class="c1"># pt_SA_CT = (pt_CT_u - pt_CT_l) / (SA_u - SA_l)</span>
+
+    <span class="n">dCT</span> <span class="o">=</span> <span class="mf">1e-2</span>
+    <span class="n">CT_l</span> <span class="o">=</span> <span class="n">CT</span> <span class="o">-</span> <span class="n">dCT</span>
+    <span class="n">CT_u</span> <span class="o">=</span> <span class="n">CT</span> <span class="o">+</span> <span class="n">dCT</span>
+    <span class="n">pt_SA_l</span><span class="p">,</span> <span class="n">pt_CT_l</span> <span class="o">=</span> <span class="n">pt_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT_l</span><span class="p">)</span>
+    <span class="n">pt_SA_u</span><span class="p">,</span> <span class="n">pt_CT_u</span> <span class="o">=</span> <span class="n">pt_first_derivatives</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT_u</span><span class="p">)</span>
+
+    <span class="n">pt_SA_CT</span> <span class="o">=</span> <span class="p">(</span><span class="n">pt_SA_u</span> <span class="o">-</span> <span class="n">pt_SA_l</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">CT_u</span> <span class="o">-</span> <span class="n">CT_l</span><span class="p">)</span>
+    <span class="n">pt_CT_CT</span> <span class="o">=</span> <span class="p">(</span><span class="n">pt_CT_u</span> <span class="o">-</span> <span class="n">pt_CT_l</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">CT_u</span> <span class="o">-</span> <span class="n">CT_l</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pt_SA_SA</span><span class="p">,</span> <span class="n">pt_SA_CT</span><span class="p">,</span> <span class="n">pt_CT_CT</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

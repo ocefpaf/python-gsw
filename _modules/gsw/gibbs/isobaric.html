@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.isobaric &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.isobaric</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">.conversions</span> <span class="k">import</span> <span class="n">CT_from_pt</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;latentheat_evap_CT&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;latentheat_melting&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;latentheat_evap_t&#39;</span><span class="p">]</span>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="latentheat_evap_CT"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.isobaric.latentheat_evap_CT">[docs]</a><span class="k">def</span> <span class="nf">latentheat_evap_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="latentheat_melting"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.isobaric.latentheat_melting">[docs]</a><span class="k">def</span> <span class="nf">latentheat_melting</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="latentheat_evap_t"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.isobaric.latentheat_evap_t">[docs]</a><span class="k">def</span> <span class="nf">latentheat_evap_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates latent heat, or enthalpy, of evaporation at p = 0 (the</span>
+<span class="sd">    surface).  It is defined as a function of Absolute Salinity, SA, and</span>
+<span class="sd">    in-situ temperature, t, and is valid in the ranges 0 &lt; SA &lt; 40 g/kg and</span>
+<span class="sd">    0 &lt; CT &lt; 42 deg C.  The errors range between -0.4 and 0.6 J/kg.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    t : array_like</span>
+<span class="sd">        in situ temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    latentheat_evap_t : array_like</span>
+<span class="sd">        latent heat of evaporation [J kg :sup:`-1`]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.39.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">CT_from_pt</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">latentheat_evap_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

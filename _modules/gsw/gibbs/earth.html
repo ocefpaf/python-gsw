@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.earth &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.earth</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.conversions</span> <span class="k">import</span> <span class="n">z_from_p</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">earth_radius</span><span class="p">,</span> <span class="n">OMEGA</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;f&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;grav&#39;</span><span class="p">]</span>
+
+<span class="n">DEG2RAD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="distance"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.earth.distance">[docs]</a><span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the distance in met res between successive points in the</span>
+<span class="sd">    vectors lon and lat, computed using the Haversine formula on a spherical</span>
+<span class="sd">    earth of radius 6,371 km, being the radius of a sphere having the same</span>
+<span class="sd">    volume as Earth.  For a spherical Earth of radius 6,371,000 m, one nautical</span>
+<span class="sd">    mile is 1,853.2488 m, thus one degree of latitude is 111,194.93 m.</span>
+
+<span class="sd">    Haversine formula:</span>
+<span class="sd">        R = earth&#39;s radius (mean radius = 6,371 km)</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        a = \sin^2(\delta \text{lat}/2) +</span>
+<span class="sd">            \cos(\text{lat}_1) \cos(\text{lat}_2) \sin^2(\delta \text{lon}/2)</span>
+
+<span class="sd">        c = 2 \times \text{atan2}(\sqrt{a}, \sqrt{(1-a)})</span>
+
+<span class="sd">        d = R \times c</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lon : array_like</span>
+<span class="sd">          decimal degrees east [0..+360] or [-180 ... +180]</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          latitude in decimal degrees north [-90..+90]</span>
+<span class="sd">    p : number or array_like. Default p = 0</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dist: array_like</span>
+<span class="sd">          distance between points on a spherical Earth at pressure (p) [m]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    z is height and is negative in the oceanographic.</span>
+
+<span class="sd">    Distances are probably good to better than 1\% of the &quot;true&quot; distance on</span>
+<span class="sd">    the ellipsoidal earth.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; lon = [159, 220]</span>
+<span class="sd">    &gt;&gt;&gt; lat = [-35, 35]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.distance(lon, lat)</span>
+<span class="sd">    array([[ 10030974.652916]])</span>
+<span class="sd">    &gt;&gt;&gt; p = [200, 1000]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.distance(lon, lat, p)</span>
+<span class="sd">    array([[ 10030661.63927133]])</span>
+<span class="sd">    &gt;&gt;&gt; p = [[200], [1000]]</span>
+<span class="sd">    &gt;&gt;&gt; gsw.distance(lon, lat, p)</span>
+<span class="sd">    array([[ 10030661.63927133],</span>
+<span class="sd">           [ 10029412.58932955]])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] http://www.eos.ubc.ca/~rich/map.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">lon</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;more than one point is needed to compute distance&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">lon</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">lat</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;lon, lat must have the same dimension&#39;</span><span class="p">)</span>
+
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">lon</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span>
+    <span class="n">dlat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">lat</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlat</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span> <span class="o">*</span>
+         <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlon</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">angles</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a</span><span class="p">))</span>
+
+    <span class="n">p_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">lat_mid</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">lat</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">lat</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z_from_p</span><span class="p">(</span><span class="n">p_mid</span><span class="p">,</span> <span class="n">lat_mid</span><span class="p">)</span>
+
+    <span class="n">distance</span> <span class="o">=</span> <span class="p">(</span><span class="n">earth_radius</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">angles</span>
+
+    <span class="k">return</span> <span class="n">distance</span></div>
+
+
+<div class="viewcode-block" id="f"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.earth.f">[docs]</a><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Coriolis parameter (f) defined by:</span>
+<span class="sd">        f = 2*omega*sin(lat)</span>
+<span class="sd">    where,</span>
+<span class="sd">        omega = 7.292115e-5 (Groten, 2004) [radians s :sup:`-1`]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          latitude [degrees north]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    f : array_like</span>
+<span class="sd">        Coriolis paramter  [s :sup:`-1`]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Groten, E., 2004: Fundamental Parameters and Current (2004) Best</span>
+<span class="sd">       Estimates of the Parameters of Common Relevance to Astronomy, Geodesy,</span>
+<span class="sd">       and Geodynamics. Journal of Geodesy, 77, pp. 724-797.</span>
+
+<span class="sd">    .. [2] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">OMEGA</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="grav"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.earth.grav">[docs]</a><span class="k">def</span> <span class="nf">grav</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates acceleration due to gravity as a function of latitude and as</span>
+<span class="sd">    a function of pressure in the ocean.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lat : array_like</span>
+<span class="sd">          latitude in decimal degrees north [-90...+90]</span>
+<span class="sd">    p : number or array_like. Default p = 0</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    g : array_like</span>
+<span class="sd">        gravity [m s :sup:`2`]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In the ocean z is negative.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; lat = [-90, -60, -30, 0]</span>
+<span class="sd">    &gt;&gt;&gt; p = 0</span>
+<span class="sd">    &gt;&gt;&gt; gsw.grav(lat, p)</span>
+<span class="sd">    array([ 9.83218621,  9.81917886,  9.79324926,  9.780327  ])</span>
+<span class="sd">    &gt;&gt;&gt; gsw.grav(45)</span>
+<span class="sd">    9.8061998770458008</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater -  2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp.</span>
+
+<span class="sd">    .. [2] Moritz (2000) Goedetic reference system 1980. J. Geodesy, 74,</span>
+<span class="sd">       128-133.</span>
+
+<span class="sd">    .. [3] Saunders, P.M., and N.P. Fofonoff (1976) Conversion of pressure to</span>
+<span class="sd">       depth in the ocean. Deep-Sea Res.,pp. 109 - 111.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span> <span class="o">*</span> <span class="n">DEG2RAD</span><span class="p">)</span>
+    <span class="n">sin2</span> <span class="o">=</span> <span class="n">X</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="mf">9.780327</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="p">(</span><span class="mf">5.2792e-3</span> <span class="o">+</span> <span class="p">(</span><span class="mf">2.32e-5</span> <span class="o">*</span> <span class="n">sin2</span><span class="p">))</span> <span class="o">*</span> <span class="n">sin2</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z_from_p</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="c1"># z is the height corresponding to p.</span>
+    <span class="n">grav</span> <span class="o">=</span> <span class="n">gs</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">grav</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

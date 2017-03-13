@@ -1,0 +1,846 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gsw.gibbs.density_enthalpy_ct_exact &#8212; gsw  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gsw.gibbs.density_enthalpy_ct_exact</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">cp0</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span>
+<span class="kn">from</span> <span class="nn">.conversions</span> <span class="k">import</span> <span class="n">t_from_CT</span><span class="p">,</span> <span class="n">CT_from_t</span><span class="p">,</span> <span class="n">pt_from_CT</span>
+<span class="kn">from</span> <span class="nn">.thermodynamics_from_t</span> <span class="k">import</span> <span class="p">(</span><span class="n">t_from_rho_exact</span><span class="p">,</span> <span class="n">rho_t_exact</span><span class="p">,</span>
+                                    <span class="n">alpha_wrt_CT_t_exact</span><span class="p">,</span> <span class="n">t_maxdensity_exact</span><span class="p">,</span>
+                                    <span class="n">enthalpy_t_exact</span><span class="p">,</span> <span class="n">beta_const_CT_t_exact</span><span class="p">,</span>
+                                    <span class="n">specvol_t_exact</span><span class="p">,</span> <span class="n">internal_energy_t_exact</span><span class="p">,</span>
+                                    <span class="n">sigma0_pt0_exact</span><span class="p">,</span> <span class="n">specvol_anom_t_exact</span><span class="p">,</span>
+                                    <span class="n">sound_speed_t_exact</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;alpha_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;beta_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CT_from_rho_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CT_maxdensity_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;dynamic_enthalpy_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;enthalpy_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;enthalpy_diff_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;internal_energy_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;rho_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;rho_alpha_beta_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;SA_from_rho_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sigma0_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sigma1_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sigma2_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sigma3_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sigma4_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sound_speed_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;specvol_CT_exact&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;specvol_anom_CT_exact&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="alpha_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.alpha_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">alpha_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the thermal expansion coefficient of seawater with respect</span>
+<span class="sd">    to Conservative Temperature from Absolute Salinity and Conservative</span>
+<span class="sd">    Temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    alpha_CT_exact : array_like</span>
+<span class="sd">                     thermal expansion coefficient [K :sup:`-1`]</span>
+<span class="sd">                     with respect to Conservative Temperature</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely alpha_wrt_CT(SA, CT, p) which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA,</span>
+<span class="sd">    CT and p (McDougall et al., (2011)).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.18.3).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">alpha_wrt_CT_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="beta_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.beta_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">beta_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the saline (i.e. haline) contraction coefficient of seawater</span>
+<span class="sd">    at constant Conservative Temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    beta_CT_exact : array_like</span>
+<span class="sd">                    thermal expansion coefficient [K :sup:`-1`]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely beta_const_CT(SA, CT, p) which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., (2011)).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.19.3).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">beta_const_CT_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CT_from_rho_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.CT_from_rho_exact">[docs]</a><span class="k">def</span> <span class="nf">CT_from_rho_exact</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the in-situ temperature of a seawater sample, for given</span>
+<span class="sd">    values of its density, Absolute Salinity and sea pressure (in dbar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rho : array_like</span>
+<span class="sd">          density of a seawater sample [kg/m**3]</span>
+<span class="sd">          This input has not had 1000 kg/m^3 subtracted from it</span>
+<span class="sd">          (e.g. 1026 kg m**-3), that is, it is density, NOT density anomaly.</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    CT_multiple : array_like</span>
+<span class="sd">                  Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    At low salinities, in brackish water, there are two possible temperatures</span>
+<span class="sd">    for a single density.  This program will output both valid solutions</span>
+<span class="sd">    (t, t_multiple), if there is only one possible solution the second variable</span>
+<span class="sd">    will be set to NaN.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 2.5.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span><span class="p">,</span> <span class="n">t_multiple</span> <span class="o">=</span> <span class="n">t_from_rho_exact</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span> <span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t_multiple</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CT_maxdensity_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.CT_maxdensity_exact">[docs]</a><span class="k">def</span> <span class="nf">CT_maxdensity_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Conservative Temperature of maximum density of seawater.</span>
+<span class="sd">    This function returns the Conservative temperature at which the density of</span>
+<span class="sd">    seawater is a maximum, at given Absolute Salinity, SA, and sea pressure,</span>
+<span class="sd">    p (in dbar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CT_maxdensity_exact : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">         at which the density of seawater is a maximum for given SA and p.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 3.42.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t_max_exact</span> <span class="o">=</span> <span class="n">t_maxdensity_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t_max_exact</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dynamic_enthalpy_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.dynamic_enthalpy_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">dynamic_enthalpy_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the dynamic enthalpy of seawater from Absolute Salinity and</span>
+<span class="sd">    Conservative Temperature and pressure.  Dynamic enthalpy is defined as</span>
+<span class="sd">    enthalpy minus potential enthalpy (Young, 2010).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dynamic_enthalpy_CT_exact : array_like</span>
+<span class="sd">                                dynamic enthalpy [J/kg]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely dynamic_enthalpy(SA, CT, p), which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See apendix A.30.</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+
+<span class="sd">    .. [3] Young, W.R., 2010: Dynamic enthalpy, Conservative Temperature, and</span>
+<span class="sd">       the seawater Boussinesq approximation. Journal of Physical Oceanography,</span>
+<span class="sd">       40, 394-400.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">enthalpy_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">cp0</span> <span class="o">*</span> <span class="n">CT</span></div>
+
+
+<span class="nd">@match_args_return</span>
+<div class="viewcode-block" id="enthalpy_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.enthalpy_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">enthalpy_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates specific enthalpy of seawater from Absolute Salinity and</span>
+<span class="sd">    Conservative Temperature and pressure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    enthalpy_CT_exact : array_like</span>
+<span class="sd">                        specific enthalpy  [J/kg]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely enthalpy_CT(SA, CT, p), which uses the</span>
+<span class="sd">    computationally-efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See appendix A.11.</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">enthalpy_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="enthalpy_diff_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.enthalpy_diff_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">enthalpy_diff_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p_shallow</span><span class="p">,</span> <span class="n">p_deep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the difference of the specific enthalpy of seawater between</span>
+<span class="sd">    two different pressures, p_deep (the deeper pressure) and p_shallow (the</span>
+<span class="sd">    shallower pressure), at the same values of SA and CT.  The output</span>
+<span class="sd">    (enthalpy_diff_CT_exact) is the specific enthalpy evaluated at</span>
+<span class="sd">    (SA, CT, p_deep) minus the specific enthalpy at (SA,CT,p_shallow).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p_shallow : array_like</span>
+<span class="sd">                lower sea pressure [dbar]</span>
+<span class="sd">    p_deep : array_like</span>
+<span class="sd">             upper sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    enthalpy_diff_CT_exact : array_like</span>
+<span class="sd">                             difference of specific enthalpy [J/kg]</span>
+<span class="sd">                             (deep minus shallow)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely enthalpy_diff_CT(SA, CT, p), which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqns (3.32.2).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t_shallow</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p_shallow</span><span class="p">)</span>
+    <span class="n">t_deep</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p_deep</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">enthalpy_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t_deep</span><span class="p">,</span> <span class="n">p_deep</span><span class="p">)</span> <span class="o">-</span>
+            <span class="n">enthalpy_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t_shallow</span><span class="p">,</span> <span class="n">p_shallow</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="internal_energy_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.internal_energy_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">internal_energy_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the specific internal energy of seawater from Absolute</span>
+<span class="sd">    Salinity, Conservative Temperature and pressure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    internal_energy_CT_exact: array_like</span>
+<span class="sd">                              specific internal energy (u) [J/kg]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.11.1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">internal_energy_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rho_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.rho_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">rho_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates in-situ density from Absolute Salinity and Conservative</span>
+<span class="sd">    Temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rho_CT_exact : array_like</span>
+<span class="sd">                   in-situ density [kg/m**3]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The potential density with respect to reference pressure, p_ref, is</span>
+<span class="sd">    obtained by calling this function with the pressure argument being p_ref</span>
+<span class="sd">    (i.e. &quot;rho_CT_exact(SA, CT, p_ref)&quot;).  This function uses the full Gibbs</span>
+<span class="sd">    function.  There is an alternative to calling this function, namely</span>
+<span class="sd">    rho_CT(SA, CT, p), which uses the computationally efficient 48-term</span>
+<span class="sd">    expression for density in terms of SA, CT and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.8.2).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rho_alpha_beta_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.rho_alpha_beta_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">rho_alpha_beta_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates in-situ density, the appropriate thermal expansion</span>
+<span class="sd">    coefficient and the appropriate saline contraction coefficient of seawater</span>
+<span class="sd">    from Absolute Salinity and Conservative Temperature.</span>
+<span class="sd">    See the individual functions rho_CT_exact, alpha_CT_exact, and</span>
+<span class="sd">    beta_CT_exact.  Retained for compatibility with the Matlab GSW toolbox.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">rho_CT_exact</span> <span class="o">=</span> <span class="n">rho_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">alpha_CT_exact</span> <span class="o">=</span> <span class="n">alpha_wrt_CT_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">beta_CT_exact</span> <span class="o">=</span> <span class="n">beta_const_CT_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_CT_exact</span><span class="p">,</span> <span class="n">alpha_CT_exact</span><span class="p">,</span> <span class="n">beta_CT_exact</span></div>
+
+
+<div class="viewcode-block" id="SA_from_rho_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.SA_from_rho_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">SA_from_rho_CT_exact</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Absolute Salinity of a seawater sample, for given values</span>
+<span class="sd">    of its density, Conservative Temperature and sea pressure (in dbar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rho : array_like</span>
+<span class="sd">          density of a seawater sample [kg/m**3]</span>
+<span class="sd">          This input has not had 1000 kg/m^3 subtracted from it</span>
+<span class="sd">          (e.g. 1026 kg m**-3), that is, it is density, NOT density anomaly.</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely SA_from_rho_CT(rho, CT, p), which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See section 2.5.</span>
+
+<span class="sd">    .. [2] Millero, F. J., R. Feistel, D. G. Wright, and T. J. McDougall, 2008:</span>
+<span class="sd">       The composition of Standard Seawater and the definition of the</span>
+<span class="sd">       Reference-Composition Salinity Scale, Deep-Sea Res. I, 55, 50-72.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">v_lab</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">rho</span>
+    <span class="n">v_0</span> <span class="o">=</span> <span class="n">specvol_CT_exact</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">rho</span><span class="p">),</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">v_120</span> <span class="o">=</span> <span class="n">specvol_CT_exact</span><span class="p">(</span><span class="mi">120</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">rho</span><span class="p">),</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="mi">120</span> <span class="o">*</span> <span class="p">(</span><span class="n">v_lab</span> <span class="o">-</span> <span class="n">v_0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">v_120</span> <span class="o">-</span> <span class="n">v_0</span><span class="p">)</span>  <span class="c1"># Initial estimate of SA.</span>
+    <span class="n">SA</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+    <span class="n">v_SA</span> <span class="o">=</span> <span class="p">(</span><span class="n">v_120</span> <span class="o">-</span> <span class="n">v_0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">120</span>  <span class="c1"># Initial v_SA estimate (SA derivative of v).</span>
+    <span class="c1"># Begin the modified Newton-Raphson iterative procedure.</span>
+    <span class="k">for</span> <span class="n">Number_of_iterations</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">SA_old</span> <span class="o">=</span> <span class="n">SA</span>
+        <span class="n">delta_v</span> <span class="o">=</span> <span class="n">specvol_CT_exact</span><span class="p">(</span><span class="n">SA_old</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">v_lab</span>
+        <span class="c1"># Half way the mod. N-R method (McDougall and Wotherspoon, 2012).</span>
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">SA_old</span> <span class="o">-</span> <span class="n">delta_v</span> <span class="o">/</span> <span class="n">v_SA</span>
+        <span class="n">SA_mean</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">SA</span> <span class="o">+</span> <span class="n">SA_old</span><span class="p">)</span>
+        <span class="n">rho</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">rho_alpha_beta_CT_exact</span><span class="p">(</span><span class="n">SA_mean</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">v_SA</span> <span class="o">=</span> <span class="o">-</span><span class="n">beta</span> <span class="o">/</span> <span class="n">rho</span>
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">SA_old</span> <span class="o">-</span> <span class="n">delta_v</span> <span class="o">/</span> <span class="n">v_SA</span>
+        <span class="n">SA</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">SA</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SA</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+    <span class="c1"># After two iterations of this modified Newton-Raphson iteration, the</span>
+    <span class="c1"># error in SA is no larger than 8x10^-13 g kg^-1, which is machine precision</span>
+    <span class="c1"># for this calculation.</span>
+    <span class="k">return</span> <span class="n">SA</span></div>
+
+
+<div class="viewcode-block" id="sigma0_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.sigma0_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">sigma0_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential density anomaly with reference pressure of 0 dbar,</span>
+<span class="sd">    this being this particular potential density minus 1000 kg/m^3.  This</span>
+<span class="sd">    function has inputs of Absolute Salinity and Conservative Temperature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sigma0_CT_exact: array_like</span>
+<span class="sd">                     Potential density anomaly with [kg/m**3]</span>
+<span class="sd">                     respect to a reference pressure of 0 dbar</span>
+<span class="sd">                     that is, this potential density - 1000 kg/m**3.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Note that this function uses the full Gibbs function.  There is an</span>
+<span class="sd">    alternative to calling this function, namely gsw_sigma0_CT(SA,CT,p), which</span>
+<span class="sd">    uses the computationally efficient 48-term expression for density in terms</span>
+<span class="sd">    of SA, CT and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (A.30.1).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pt0</span> <span class="o">=</span> <span class="n">pt_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sigma0_pt0_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">pt0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sigma1_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.sigma1_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">sigma1_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential density anomaly with reference pressure of</span>
+<span class="sd">    1000 dbar.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="mf">1000.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">1000.</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1000</span></div>
+
+
+<div class="viewcode-block" id="sigma2_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.sigma2_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">sigma2_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential density anomaly with reference pressure of</span>
+<span class="sd">    2000 dbar.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1000</span></div>
+
+
+<div class="viewcode-block" id="sigma3_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.sigma3_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">sigma3_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential density anomaly with reference pressure of</span>
+<span class="sd">    3000 dbar.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="mf">3000.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">3000.</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1000</span></div>
+
+
+<div class="viewcode-block" id="sigma4_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.sigma4_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">sigma4_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates potential density anomaly with reference pressure of</span>
+<span class="sd">    4000 dbar.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="mf">4000.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">4000.</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1000</span></div>
+
+
+<div class="viewcode-block" id="sound_speed_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.sound_speed_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">sound_speed_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the speed of sound in seawater from Absolute Salinity and</span>
+<span class="sd">    Conservative Temperature and pressure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute salinity [g kg :sup:`-1`]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">        Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sound_speed_CT_exact : array_like</span>
+<span class="sd">    Speed of sound in seawater [m s :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.17.1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sound_speed_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="specvol_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.specvol_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">specvol_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates specific volume from Absolute Salinity, Conservative</span>
+<span class="sd">    Temperature and pressure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    specvol_CT_exact : array_like</span>
+<span class="sd">                       specific volume  [m**3/kg]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely specvol_CT(SA, CT, p), which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (2.7.2).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">specvol_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="specvol_anom_CT_exact"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.gibbs.density_enthalpy_ct_exact.specvol_anom_CT_exact">[docs]</a><span class="k">def</span> <span class="nf">specvol_anom_CT_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates specific volume anomaly from Absolute Salinity, Conservative</span>
+<span class="sd">    Temperature and pressure.  The reference value of Absolute Salinity is SSO</span>
+<span class="sd">    and the reference value of Conservative Temperature is equal to 0 deg C.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SA : array_like</span>
+<span class="sd">         Absolute Salinity  [g/kg]</span>
+<span class="sd">    CT : array_like</span>
+<span class="sd">         Conservative Temperature [:math:`^\circ` C (ITS-90)]</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        sea pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    specvol_anom_CT_exact : array_like</span>
+<span class="sd">                            specific volume anomaly [m**3/kg]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses the full Gibbs function.  There is an alternative to</span>
+<span class="sd">    calling this function, namely specvol_anom_CT(SA, CT, p), which uses the</span>
+<span class="sd">    computationally efficient 48-term expression for density in terms of SA, CT</span>
+<span class="sd">    and p (McDougall et al., 2011).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TODO</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</span>
+<span class="sd">       of seawater - 2010: Calculation and use of thermodynamic properties.</span>
+<span class="sd">       Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</span>
+<span class="sd">       UNESCO (English), 196 pp. See Eqn. (3.7.3).</span>
+
+<span class="sd">    .. [2] McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A</span>
+<span class="sd">       computationally efficient 48-term expression for the density of</span>
+<span class="sd">       seawater in terms of Conservative Temperature, and related properties</span>
+<span class="sd">       of seawater.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_from_CT</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">specvol_anom_t_exact</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
