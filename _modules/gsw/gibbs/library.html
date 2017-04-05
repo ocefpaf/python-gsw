@@ -53,6 +53,7 @@
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">match_args_return</span><span class="p">,</span> <span class="n">strip_mask</span><span class="p">,</span> <span class="n">read_data</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;deltaSA_atlas&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;enthalpy_SSO_0&#39;</span><span class="p">,</span>
            <span class="s1">&#39;enthalpy_SSO_0_p&#39;</span><span class="p">,</span>
            <span class="s1">&#39;entropy_part&#39;</span><span class="p">,</span>
            <span class="s1">&#39;entropy_part_zerop&#39;</span><span class="p">,</span>
@@ -67,6 +68,10 @@
            <span class="s1">&#39;SA_from_SP_Baltic&#39;</span><span class="p">,</span>
            <span class="s1">&#39;specvol_SSO_0_p&#39;</span><span class="p">,</span>
            <span class="s1">&#39;SP_from_SA_Baltic&#39;</span><span class="p">]</span>
+
+
+<span class="n">h006</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.1078768810e-9</span>
+<span class="n">h007</span> <span class="o">=</span>  <span class="mf">2.8019291329e-10</span>
 
 
 <span class="k">class</span> <span class="nc">SA_table</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -230,9 +235,11 @@
         <span class="c1"># Editing options, in case we don&#39;t want to use</span>
         <span class="c1"># values calculated from the wrong pressure, or from</span>
         <span class="c1"># an incomplete SA table grid square.</span>
-        <span class="n">mask_out</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_fudge</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_p_fudge</span>
-        <span class="n">mask_out</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac1</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_frac</span>
-        <span class="n">delta_SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">delta_SA</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_out</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># mask_out |= self.p_fudge &gt; self.max_p_fudge</span>
+        <span class="c1"># mask_out |= self.frac1 &lt; self.min_frac</span>
+        <span class="c1"># delta_SA = np.ma.array(delta_SA, mask=mask_out, copy=False)</span>
+        <span class="c1"># Later on, it is expected to be a masked array.</span>
+        <span class="n">delta_SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">delta_SA</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">reshaped</span><span class="p">:</span>
             <span class="n">delta_SA</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape_in</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">p_fudge</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape_in</span>
@@ -620,7 +627,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">SA</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">,</span> <span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)))</span>
-    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">SA</span><span class="p">)</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">SA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">xb1</span><span class="p">,</span> <span class="n">xb2</span><span class="p">,</span> <span class="n">xb3</span> <span class="o">=</span> <span class="mf">12.6</span><span class="p">,</span> <span class="mf">7.</span><span class="p">,</span> <span class="mf">26.</span>
     <span class="n">xb1a</span><span class="p">,</span> <span class="n">xb3a</span> <span class="o">=</span> <span class="mf">45.</span><span class="p">,</span> <span class="mf">26.</span>
     <span class="n">yb1</span><span class="p">,</span> <span class="n">yb2</span><span class="p">,</span> <span class="n">yb3</span> <span class="o">=</span> <span class="mf">50.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">69.</span>
@@ -735,6 +742,52 @@
                            <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">b2</span> <span class="o">*</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">B</span> <span class="o">-</span> <span class="n">A</span><span class="p">))</span> <span class="o">/</span>
                            <span class="p">(</span><span class="n">A</span> <span class="o">*</span> <span class="p">(</span><span class="n">B</span> <span class="o">+</span> <span class="n">b2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)))))</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">enthalpy_SSO_0_CT25</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="enthalpy_SSO_0"><a class="viewcode-back" href="../../../gsw.gibbs.html#gsw.enthalpy_SSO_0">[docs]</a><span class="k">def</span> <span class="nf">enthalpy_SSO_0</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enthalpy at SSO and CT(T=0) (75-term equation)</span>
+
+<span class="sd">    This function calculates enthalpy at the Standard Ocean Salinty, SSO,</span>
+<span class="sd">    and at a Conservative Temperature of zero degrees C, as a function of</span>
+<span class="sd">    pressure, p, in dbar, using a streamlined version of the 75-term</span>
+<span class="sd">    computationally-efficient expression for specific volume, that is, a</span>
+<span class="sd">    streamlined version of the code &quot;enthalpy(SA,CT,p)&quot;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p : array_like</span>
+<span class="sd">        pressure [dbar]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    enthalpy_SSO_0 : array_like</span>
+<span class="sd">                     enthalpy at (SSO, CT=0, p)</span>
+<span class="sd">                     [J kg :sup:`-1`]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gsw</span>
+<span class="sd">    &gt;&gt;&gt; p = np.array([10, 50, 125, 250, 600, 1000])</span>
+<span class="sd">    &gt;&gt;&gt; gsw.library.enthalpy_SSO_0(p)</span>
+<span class="sd">    array([   97.26388583,   486.27439853,  1215.47517122,  2430.24907325,</span>
+<span class="sd">            5827.90879421,  9704.32030926])</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Roquet, F., G. Madec, T.J. McDougall, P.M. Barker, 2015: Accurate</span>
+<span class="sd">           polynomial expressions for the density and specifc volume of</span>
+<span class="sd">           seawater using the TEOS-10 standard. Ocean Modelling.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="mf">1e-4</span>
+
+    <span class="n">dynamic_enthalpy_SSO_0_p</span> <span class="o">=</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mf">9.726613854843870e-4</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="o">-</span><span class="mf">2.252956605630465e-5</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.376909655387404e-6</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="o">-</span><span class="mf">1.664294869986011e-7</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">5.988108894465758e-9</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">h006</span> <span class="o">+</span> <span class="n">h007</span> <span class="o">*</span> <span class="n">z</span><span class="p">))))))</span>
+
+    <span class="k">return</span> <span class="n">dynamic_enthalpy_SSO_0_p</span> <span class="o">*</span> <span class="n">db2Pascal</span> <span class="o">*</span> <span class="mf">1e4</span></div>
 
 
 <span class="c1"># FIXME: Check if this is still used and remove it.</span>
@@ -1510,7 +1563,7 @@
         <span class="n">in_rectangle</span> <span class="o">=</span> <span class="n">in_rectangle</span><span class="o">.</span><span class="n">data</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">in_rectangle</span><span class="o">.</span><span class="n">mask</span>
     <span class="c1"># Closer check for points in the rectangle</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">in_rectangle</span><span class="p">):</span>
-        <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">in_baltic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lon</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
         <span class="n">lon1</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="n">in_rectangle</span><span class="p">]</span>
         <span class="n">lat1</span> <span class="o">=</span> <span class="n">lat</span><span class="p">[</span><span class="n">in_rectangle</span><span class="p">]</span>
@@ -1552,7 +1605,7 @@
 
     <span class="c1"># Check variables and re-size if necessary.</span>
     <span class="n">scalar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">SA</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">CT</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">input_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">SA</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">CT</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="n">infunnel</span> <span class="o">=</span> <span class="p">((</span><span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">8000</span><span class="p">)</span> <span class="o">&amp;</span>
                 <span class="p">(</span><span class="n">SA</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span>
@@ -1803,7 +1856,7 @@
       &copy;2017, Author.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

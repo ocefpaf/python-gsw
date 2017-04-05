@@ -1,17 +1,12 @@
 ./_modules/gsw/gibbs/conversions.html
 ./_modules/gsw/gibbs/density_enthalpy_48.html
-./_modules/gsw/gibbs/density_enthalpy_48_ct.html
 ./_modules/gsw/gibbs/density_enthalpy_ct_exact.html
 ./_modules/gsw/gibbs/derivatives.html
 ./_modules/gsw/gibbs/earth.html
 ./_modules/gsw/gibbs/freezing.html
-./_modules/gsw/gibbs/geostrophic.html
-./_modules/gsw/gibbs/geostrophic_48.html
 ./_modules/gsw/gibbs/isobaric.html
 ./_modules/gsw/gibbs/library.html
-./_modules/gsw/gibbs/neutral_nonlinear_48.html
 ./_modules/gsw/gibbs/practical_salinity.html
-./_modules/gsw/gibbs/steric.html
 ./_modules/gsw/gibbs/thermodynamics_from_t.html
 ./_modules/gsw/gibbs/water_column_48.html
 ./_modules/index.html

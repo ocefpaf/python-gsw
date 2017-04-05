@@ -194,7 +194,13 @@ See Eqn. (3.3.3) and Table D.5 from IOC et al. (2010).</p>
 <dl class="data">
 <dt id="gsw.gibbs.constants.sfac">
 <code class="descclassname">gsw.gibbs.constants.</code><code class="descname">sfac</code><em class="property"> = 0.0248826675584615</em><a class="headerlink" href="#gsw.gibbs.constants.sfac" title="Permalink to this definition">¶</a></dt>
-<dd><p>sfac = 1 / (40. * (SSO / 35.))</p>
+<dd><p>sfac = 1 / (40 * uPS) = 1 / (40. * (SSO / 35.))</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gsw.gibbs.constants.soffset">
+<code class="descclassname">gsw.gibbs.constants.</code><code class="descname">soffset</code><em class="property"> = 0.5971840214030754</em><a class="headerlink" href="#gsw.gibbs.constants.soffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>soffset = deltaS * sfac.</p>
 </dd></dl>
 
 <dl class="data">
@@ -601,11 +607,6 @@ UNESCO (English), 196 pp.</td></tr>
 <p class="rubric">Examples</p>
 <p>TODO</p>
 </dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.conversions.SP_from_Sstar">
-<code class="descclassname">gsw.gibbs.conversions.</code><code class="descname">SP_from_Sstar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/conversions.html#SP_from_Sstar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.conversions.SP_from_Sstar" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="gsw.gibbs.conversions.SR_from_SP">
@@ -2559,101 +2560,6 @@ of seawater.</td></tr>
 </div>
 <div class="section" id="module-gsw.gibbs.density_enthalpy_48_ct">
 <span id="gsw-gibbs-density-enthalpy-48-ct-module"></span><h2>gsw.gibbs.density_enthalpy_48_ct module<a class="headerlink" href="#module-gsw.gibbs.density_enthalpy_48_ct" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.alpha_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">alpha_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#alpha_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.alpha_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.beta_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">beta_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#beta_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.beta_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.CT_from_rho">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">CT_from_rho</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#CT_from_rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.CT_from_rho" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.CT_maxdensity">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">CT_maxdensity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#CT_maxdensity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.CT_maxdensity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.dynamic_enthalpy_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">dynamic_enthalpy_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#dynamic_enthalpy_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.dynamic_enthalpy_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.enthalpy_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">enthalpy_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#enthalpy_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.enthalpy_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.enthalpy_diff_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">enthalpy_diff_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#enthalpy_diff_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.enthalpy_diff_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.internal_energy_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">internal_energy_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#internal_energy_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.internal_energy_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.rho_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">rho_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#rho_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.rho_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.rho_alpha_beta_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">rho_alpha_beta_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#rho_alpha_beta_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.rho_alpha_beta_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.SA_from_rho_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">SA_from_rho_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#SA_from_rho_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.SA_from_rho_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.sigma0_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">sigma0_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#sigma0_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.sigma0_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.sigma1_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">sigma1_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#sigma1_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.sigma1_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.sigma2_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">sigma2_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#sigma2_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.sigma2_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.sigma3_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">sigma3_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#sigma3_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.sigma3_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.sigma4_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">sigma4_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#sigma4_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.sigma4_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.sound_speed_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">sound_speed_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#sound_speed_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.sound_speed_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.specvol_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">specvol_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#specvol_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.specvol_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.density_enthalpy_48_ct.specvol_anom_CT">
-<code class="descclassname">gsw.gibbs.density_enthalpy_48_ct.</code><code class="descname">specvol_anom_CT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/density_enthalpy_48_ct.html#specvol_anom_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.density_enthalpy_48_ct.specvol_anom_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-gsw.gibbs.density_enthalpy_ct_exact">
 <span id="gsw-gibbs-density-enthalpy-ct-exact-module"></span><h2>gsw.gibbs.density_enthalpy_ct_exact module<a class="headerlink" href="#module-gsw.gibbs.density_enthalpy_ct_exact" title="Permalink to this headline">¶</a></h2>
@@ -4432,57 +4338,12 @@ UNESCO (English), 196 pp. See sections 3.33 and 3.34.</td></tr>
 </div>
 <div class="section" id="module-gsw.gibbs.geostrophic">
 <span id="gsw-gibbs-geostrophic-module"></span><h2>gsw.gibbs.geostrophic module<a class="headerlink" href="#module-gsw.gibbs.geostrophic" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic.geostrophic_velocity">
-<code class="descclassname">gsw.gibbs.geostrophic.</code><code class="descname">geostrophic_velocity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic.html#geostrophic_velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic.geostrophic_velocity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-gsw.gibbs.geostrophic_48">
 <span id="gsw-gibbs-geostrophic-48-module"></span><h2>gsw.gibbs.geostrophic_48 module<a class="headerlink" href="#module-gsw.gibbs.geostrophic_48" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic_48.geo_strf_Cunningham">
-<code class="descclassname">gsw.gibbs.geostrophic_48.</code><code class="descname">geo_strf_Cunningham</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic_48.html#geo_strf_Cunningham"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic_48.geo_strf_Cunningham" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic_48.geo_strf_dyn_height">
-<code class="descclassname">gsw.gibbs.geostrophic_48.</code><code class="descname">geo_strf_dyn_height</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic_48.html#geo_strf_dyn_height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic_48.geo_strf_dyn_height" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic_48.geo_strf_dyn_height_pc">
-<code class="descclassname">gsw.gibbs.geostrophic_48.</code><code class="descname">geo_strf_dyn_height_pc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic_48.html#geo_strf_dyn_height_pc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic_48.geo_strf_dyn_height_pc" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic_48.geo_strf_isopycnal">
-<code class="descclassname">gsw.gibbs.geostrophic_48.</code><code class="descname">geo_strf_isopycnal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic_48.html#geo_strf_isopycnal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic_48.geo_strf_isopycnal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic_48.geof_str_isopycnal_pc">
-<code class="descclassname">gsw.gibbs.geostrophic_48.</code><code class="descname">geof_str_isopycnal_pc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic_48.html#geof_str_isopycnal_pc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic_48.geof_str_isopycnal_pc" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.geostrophic_48.geo_strf_Montgomery">
-<code class="descclassname">gsw.gibbs.geostrophic_48.</code><code class="descname">geo_strf_Montgomery</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/geostrophic_48.html#geo_strf_Montgomery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.geostrophic_48.geo_strf_Montgomery" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-gsw.gibbs.isobaric">
 <span id="gsw-gibbs-isobaric-module"></span><h2>gsw.gibbs.isobaric module<a class="headerlink" href="#module-gsw.gibbs.isobaric" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="gsw.gibbs.isobaric.latentheat_evap_CT">
-<code class="descclassname">gsw.gibbs.isobaric.</code><code class="descname">latentheat_evap_CT</code><span class="sig-paren">(</span><em>SA</em>, <em>CT</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/isobaric.html#latentheat_evap_CT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.isobaric.latentheat_evap_CT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.isobaric.latentheat_melting">
-<code class="descclassname">gsw.gibbs.isobaric.</code><code class="descname">latentheat_melting</code><span class="sig-paren">(</span><em>SA</em>, <em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/isobaric.html#latentheat_melting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.isobaric.latentheat_melting" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="function">
 <dt id="gsw.gibbs.isobaric.latentheat_evap_t">
 <code class="descclassname">gsw.gibbs.isobaric.</code><code class="descname">latentheat_evap_t</code><span class="sig-paren">(</span><em>SA</em>, <em>t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/isobaric.html#latentheat_evap_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.isobaric.latentheat_evap_t" title="Permalink to this definition">¶</a></dt>
@@ -4596,6 +4457,53 @@ Science. A preliminary version is available at Ocean Sci. Discuss.,
 </dd></dl>
 
 <dl class="function">
+<dt id="gsw.gibbs.library.enthalpy_SSO_0">
+<code class="descclassname">gsw.gibbs.library.</code><code class="descname">enthalpy_SSO_0</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/library.html#enthalpy_SSO_0"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.library.enthalpy_SSO_0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enthalpy at SSO and CT(T=0) (75-term equation)</p>
+<p>This function calculates enthalpy at the Standard Ocean Salinty, SSO,
+and at a Conservative Temperature of zero degrees C, as a function of
+pressure, p, in dbar, using a streamlined version of the 75-term
+computationally-efficient expression for specific volume, that is, a
+streamlined version of the code &#8220;enthalpy(SA,CT,p)&#8221;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>p</strong> : array_like</p>
+<blockquote>
+<div><p>pressure [dbar]</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>enthalpy_SSO_0</strong> : array_like</p>
+<blockquote class="last">
+<div><p>enthalpy at (SSO, CT=0, p)
+[J kg <sup>-1</sup>]</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r123" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id117">[R123]</a></td><td>Roquet, F., G. Madec, T.J. McDougall, P.M. Barker, 2015: Accurate
+polynomial expressions for the density and specifc volume of
+seawater using the TEOS-10 standard. Ocean Modelling.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">gsw</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">125</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">1000</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gsw</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">enthalpy_SSO_0</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">array([   97.26388583,   486.27439853,  1215.47517122,  2430.24907325,</span>
+<span class="go">        5827.90879421,  9704.32030926])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="gsw.gibbs.library.enthalpy_SSO_0_p">
 <code class="descclassname">gsw.gibbs.library.</code><code class="descname">enthalpy_SSO_0_p</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/library.html#enthalpy_SSO_0_p"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.library.enthalpy_SSO_0_p" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function calculates enthalpy at the Standard Ocean Salinty, SSO,
@@ -4604,10 +4512,10 @@ pressure, p, in dbar, using a streamlined version of the 48-term CT
 version of the Gibbs function, that is, a streamlined version of the
 code &#8220;enthalpy(SA,CT,p).</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r123" rules="none">
+<table class="docutils citation" frame="void" id="r124" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id117">[R123]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2013:  A
+<tr><td class="label"><a class="fn-backref" href="#id118">[R124]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2013:  A
 computationally efficient 48-term expression for the density of seawater
 in terms of Conservative Temperature, and related properties of
 seawater.  To be submitted to J. Atm. Ocean. Technol., xx, yyy-zzz.</td></tr>
@@ -4739,29 +4647,29 @@ ocean, Fdelta is only slightly different to 1.35*SAAR.</p>
 land; often the warning flag is not set until one is several hundred
 kilometers inland from the coast.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r124" rules="none">
+<table class="docutils citation" frame="void" id="r125" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id118">[R124]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id119">[R125]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.  Available from <a class="reference external" href="http://www.TEOS-10.org">http://www.TEOS-10.org</a>
 See section 2.5 and appendices A.4 and A.5 of this TEOS-10 Manual.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r125" rules="none">
+<table class="docutils citation" frame="void" id="r126" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id119">[R125]</a></td><td>McDougall, T.J., D.R. Jackett, F.J. Millero, R. Pawlowicz and
+<tr><td class="label"><a class="fn-backref" href="#id120">[R126]</a></td><td>McDougall, T.J., D.R. Jackett, F.J. Millero, R. Pawlowicz and
 P.M. Barker, 2012: A global algorithm for estimating Absolute Salinity.
 Ocean Science, 8, 1123-1134.
 <a class="reference external" href="http://www.ocean-sci.net/8/1123/2012/os-8-1123-2012.pdf">http://www.ocean-sci.net/8/1123/2012/os-8-1123-2012.pdf</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r126" rules="none">
+<table class="docutils citation" frame="void" id="r127" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id120">[R126]</a></td><td>Pawlowicz, R., D.G. Wright and F.J. Millero, 2011; The effects of
+<tr><td class="label"><a class="fn-backref" href="#id121">[R127]</a></td><td>Pawlowicz, R., D.G. Wright and F.J. Millero, 2011; The effects of
 biogeochemical processes on oceanic conductivity/salinty/density
 relationships and the characterization of real seawater. Ocean Science,
 7, 363-387.  <a class="reference external" href="http://www.ocean-sci.net/7/363/2011/os-7-363-2011.pdf">http://www.ocean-sci.net/7/363/2011/os-7-363-2011.pdf</a></td></tr>
@@ -4841,54 +4749,54 @@ Reference-Composition Salinity Scale of 2008 (RCSS-08) of Millero et al.
 The derivatives are taken with respect to pressure in Pa, not withstanding
 that the pressure input into this routine is in dbar.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r127" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id121">[R127]</a></td><td>Feistel, R., 2003: A new extended Gibbs thermodynamic potential of
-seawater Progr. Oceanogr., 58, 43-114.</td></tr>
-</tbody>
-</table>
 <table class="docutils citation" frame="void" id="r128" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id122">[R128]</a></td><td>Feistel, R., 2008: A Gibbs function for seawater thermodynamics
-for -6 to 80 <span class="math">\(^\circ\)</span> C and salinity up to 120 g kg <sup>-1</sup>,
-Deep-Sea Res. I, 55, 1639-1671.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id122">[R128]</a></td><td>Feistel, R., 2003: A new extended Gibbs thermodynamic potential of
+seawater Progr. Oceanogr., 58, 43-114.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="r129" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id123">[R129]</a></td><td>IAPWS, 2008: Release on the IAPWS Formulation 2008 for the
+<tr><td class="label"><a class="fn-backref" href="#id123">[R129]</a></td><td>Feistel, R., 2008: A Gibbs function for seawater thermodynamics
+for -6 to 80 <span class="math">\(^\circ\)</span> C and salinity up to 120 g kg <sup>-1</sup>,
+Deep-Sea Res. I, 55, 1639-1671.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r130" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id124">[R130]</a></td><td>IAPWS, 2008: Release on the IAPWS Formulation 2008 for the
 Thermodynamic Properties of Seawater. The International Association for
 the Properties of Water and Steam. Berlin, Germany, September 2008,
 available from <a class="reference external" href="http://www.iapws.org">http://www.iapws.org</a>.  This Release is referred to as
 IAPWS-08.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r130" rules="none">
+<table class="docutils citation" frame="void" id="r131" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id124">[R130]</a></td><td>IAPWS, 2009: Supplementary Release on a Computationally Efficient
+<tr><td class="label"><a class="fn-backref" href="#id125">[R131]</a></td><td>IAPWS, 2009: Supplementary Release on a Computationally Efficient
 Thermodynamic Formulation for Liquid Water for Oceanographic Use. The
 International Association for the Properties of Water and Steam.
 Doorwerth, The Netherlands, September 2009, available from
 <a class="reference external" href="http://www.iapws.org">http://www.iapws.org</a>.  This Release is referred to as IAPWS-09.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r131" rules="none">
+<table class="docutils citation" frame="void" id="r132" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id125">[R131]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id126">[R132]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 2.6 and appendices A.6,  G and H.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r132" rules="none">
+<table class="docutils citation" frame="void" id="r133" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id126">[R132]</a></td><td>Millero, F. J., R. Feistel, D. G. Wright, and T. J. McDougall, 2008:
+<tr><td class="label"><a class="fn-backref" href="#id127">[R133]</a></td><td>Millero, F. J., R. Feistel, D. G. Wright, and T. J. McDougall, 2008:
 The composition of Standard Seawater and the definition of the
 Reference-Composition Salinity Scale, Deep-Sea Res. I, 55, 50-72.</td></tr>
 </tbody>
@@ -5083,19 +4991,19 @@ kilometers inland from the coast.</p>
 but the numpy implementation here differs substantially from the
 matlab implementation.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r133" rules="none">
+<table class="docutils citation" frame="void" id="r134" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id127">[R133]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id128">[R134]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r134" rules="none">
+<table class="docutils citation" frame="void" id="r135" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id128">[R134]</a></td><td>McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm
+<tr><td class="label"><a class="fn-backref" href="#id129">[R135]</a></td><td>McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm
 for estimating Absolute Salinity in the global ocean.  Submitted to
 Ocean Science. A preliminary version is available at Ocean Sci.
 Discuss., 6, 215-242.
@@ -5182,28 +5090,28 @@ computed analytically from Absolute Salinity.</p>
 <p>This program will only produce Practical Salinity values for the Baltic
 Sea.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r135" rules="none">
+<table class="docutils citation" frame="void" id="r136" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id129">[R135]</a></td><td>Feistel, R., S. Weinreben, H. Wolf, S. Seitz, P. Spitzer, B. Adel,
+<tr><td class="label"><a class="fn-backref" href="#id130">[R136]</a></td><td>Feistel, R., S. Weinreben, H. Wolf, S. Seitz, P. Spitzer, B. Adel,
 G. Nausch, B. Schneider and D. G. Wright, 2010c: Density and Absolute
 Salinity of the Baltic Sea 2006-2009.  Ocean Science, 6, 3-24.
 <a class="reference external" href="http://www.ocean-sci.net/6/3/2010/os-6-3-2010.pdf">http://www.ocean-sci.net/6/3/2010/os-6-3-2010.pdf</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r136" rules="none">
+<table class="docutils citation" frame="void" id="r137" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id130">[R136]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id131">[R137]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r137" rules="none">
+<table class="docutils citation" frame="void" id="r138" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id131">[R137]</a></td><td>McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm
+<tr><td class="label"><a class="fn-backref" href="#id132">[R138]</a></td><td>McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm
 for estimating Absolute Salinity in the global ocean. Submitted to Ocean
 Science. A preliminary version is available at Ocean Sci. Discuss.,
 6, 215-242.
@@ -5217,31 +5125,6 @@ Science. A preliminary version is available at Ocean Sci. Discuss.,
 </div>
 <div class="section" id="module-gsw.gibbs.neutral_nonlinear_48">
 <span id="gsw-gibbs-neutral-nonlinear-48-module"></span><h2>gsw.gibbs.neutral_nonlinear_48 module<a class="headerlink" href="#module-gsw.gibbs.neutral_nonlinear_48" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="gsw.gibbs.neutral_nonlinear_48.cabbeling">
-<code class="descclassname">gsw.gibbs.neutral_nonlinear_48.</code><code class="descname">cabbeling</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/neutral_nonlinear_48.html#cabbeling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.neutral_nonlinear_48.cabbeling" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.neutral_nonlinear_48.isopycnal_slope_ratio">
-<code class="descclassname">gsw.gibbs.neutral_nonlinear_48.</code><code class="descname">isopycnal_slope_ratio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/neutral_nonlinear_48.html#isopycnal_slope_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.neutral_nonlinear_48.isopycnal_slope_ratio" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.neutral_nonlinear_48.isopycnal_vs_ntp_CT_ratio">
-<code class="descclassname">gsw.gibbs.neutral_nonlinear_48.</code><code class="descname">isopycnal_vs_ntp_CT_ratio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/neutral_nonlinear_48.html#isopycnal_vs_ntp_CT_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.neutral_nonlinear_48.isopycnal_vs_ntp_CT_ratio" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.neutral_nonlinear_48.ntp_pt_vs_CT_ratio">
-<code class="descclassname">gsw.gibbs.neutral_nonlinear_48.</code><code class="descname">ntp_pt_vs_CT_ratio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/neutral_nonlinear_48.html#ntp_pt_vs_CT_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.neutral_nonlinear_48.ntp_pt_vs_CT_ratio" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.neutral_nonlinear_48.thermobaric">
-<code class="descclassname">gsw.gibbs.neutral_nonlinear_48.</code><code class="descname">thermobaric</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/neutral_nonlinear_48.html#thermobaric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.neutral_nonlinear_48.thermobaric" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-gsw.gibbs.practical_salinity">
 <span id="gsw-gibbs-practical-salinity-module"></span><h2>gsw.gibbs.practical_salinity module<a class="headerlink" href="#module-gsw.gibbs.practical_salinity" title="Permalink to this headline">¶</a></h2>
@@ -5294,27 +5177,27 @@ Salinity in terms of the conductivity ratio, R, without actually
 specifying the value of C(35,15,0) (which we currently take to be
 42.9140 mS/cm).</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r138" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id132">[R138]</a></td><td>Hill, K.D., T.M. Dauphinee and D.J. Woods, 1986: The extension of
-the Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic
-Eng., OE-11, 1, 109 - 112.</td></tr>
-</tbody>
-</table>
 <table class="docutils citation" frame="void" id="r139" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id133">[R139]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
-of seawater - 2010: Calculation and use of thermodynamic properties.
-Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
-UNESCO (English), 196 pp. See appendix E.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id133">[R139]</a></td><td>Hill, K.D., T.M. Dauphinee and D.J. Woods, 1986: The extension of
+the Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic
+Eng., OE-11, 1, 109 - 112.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="r140" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id134">[R140]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
+<tr><td class="label"><a class="fn-backref" href="#id134">[R140]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+of seawater - 2010: Calculation and use of thermodynamic properties.
+Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
+UNESCO (English), 196 pp. See appendix E.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r141" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id135">[R141]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
 of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</td></tr>
 </tbody>
 </table>
@@ -5371,36 +5254,36 @@ of the conductivity ratio, R, without actually specifying the value of
 C(35, 15, 0) (which we currently take to be 42.9140 mS cm^-1.
 Culkin and Smith, 1980).</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r141" rules="none">
+<table class="docutils citation" frame="void" id="r142" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id135">[R141]</a></td><td>Culkin and Smith, 1980:  Determination of the Concentration of
+<tr><td class="label"><a class="fn-backref" href="#id136">[R142]</a></td><td>Culkin and Smith, 1980:  Determination of the Concentration of
 Potassium Chloride Solution Having the Same Electrical Conductivity, at
 15C and Infinite Frequency, as Standard Seawater of Salinity 35.0000
 (Chlorinity 19.37394), IEEE J. Oceanic Eng, 5, 22-23.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r142" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id136">[R142]</a></td><td>Hill, K.D., T.M. Dauphinee &amp; D.J. Woods, 1986: The extension of the
-Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic Eng.,
-11, 109 - 112.</td></tr>
-</tbody>
-</table>
 <table class="docutils citation" frame="void" id="r143" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id137">[R143]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
-of seawater - 2010: Calculation and use of thermodynamic properties.
-Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
-UNESCO (English), 196 pp.  Appendix E.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id137">[R143]</a></td><td>Hill, K.D., T.M. Dauphinee &amp; D.J. Woods, 1986: The extension of the
+Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic Eng.,
+11, 109 - 112.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="r144" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id138">[R144]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
+<tr><td class="label"><a class="fn-backref" href="#id138">[R144]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+of seawater - 2010: Calculation and use of thermodynamic properties.
+Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
+UNESCO (English), 196 pp.  Appendix E.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r145" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id139">[R145]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
 of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</td></tr>
 </tbody>
 </table>
@@ -5431,10 +5314,10 @@ of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r145" rules="none">
+<table class="docutils citation" frame="void" id="r146" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id139">[R145]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id140">[R146]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.  See Appendix A.3.</td></tr>
@@ -5483,36 +5366,36 @@ values of conductivity need to be in units of mS/cm (not S/m).</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r146" rules="none">
+<table class="docutils citation" frame="void" id="r147" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id140">[R146]</a></td><td>Culkin and Smith, 1980:  Determination of the Concentration of
+<tr><td class="label"><a class="fn-backref" href="#id141">[R147]</a></td><td>Culkin and Smith, 1980:  Determination of the Concentration of
 Potassium Chloride Solution Having the Same Electrical Conductivity, at
 15C and Infinite Frequency, as Standard Seawater of Salinity 35.0000
 (Chlorinity 19.37394), IEEE J. Oceanic Eng, 5, 22-23.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r147" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id141">[R147]</a></td><td>Hill, K.D., T.M. Dauphinee &amp; D.J. Woods, 1986: The extension of the
-Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic Eng.,
-11, 109 - 112.</td></tr>
-</tbody>
-</table>
 <table class="docutils citation" frame="void" id="r148" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id142">[R148]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
-of seawater - 2010: Calculation and use of thermodynamic properties.
-Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
-UNESCO (English), 196 pp.  Appendix E.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id142">[R148]</a></td><td>Hill, K.D., T.M. Dauphinee &amp; D.J. Woods, 1986: The extension of the
+Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic Eng.,
+11, 109 - 112.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="r149" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id143">[R149]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
+<tr><td class="label"><a class="fn-backref" href="#id143">[R149]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+of seawater - 2010: Calculation and use of thermodynamic properties.
+Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
+UNESCO (English), 196 pp.  Appendix E.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r150" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id144">[R150]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
 of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</td></tr>
 </tbody>
 </table>
@@ -5558,36 +5441,36 @@ to ensure that it is exactly consistent with PSS-78 at SP = 2.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r150" rules="none">
+<table class="docutils citation" frame="void" id="r151" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id144">[R150]</a></td><td>Culkin and Smith, 1980:  Determination of the Concentration of
+<tr><td class="label"><a class="fn-backref" href="#id145">[R151]</a></td><td>Culkin and Smith, 1980:  Determination of the Concentration of
 Potassium Chloride Solution Having the Same Electrical Conductivity, at
 15C and Infinite Frequency, as Standard Seawater of Salinity 35.0000
 (Chlorinity 19.37394), IEEE J. Oceanic Eng, 5, 22-23.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r151" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id145">[R151]</a></td><td>Hill, K.D., T.M. Dauphinee &amp; D.J. Woods, 1986: The extension of the
-Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic Eng.,
-11, 109 - 112.</td></tr>
-</tbody>
-</table>
 <table class="docutils citation" frame="void" id="r152" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id146">[R152]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
-of seawater - 2010: Calculation and use of thermodynamic properties.
-Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
-UNESCO (English), 196 pp.  Appendix E.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id146">[R152]</a></td><td>Hill, K.D., T.M. Dauphinee &amp; D.J. Woods, 1986: The extension of the
+Practical Salinity Scale 1978 to low salinities. IEEE J. Oceanic Eng.,
+11, 109 - 112.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="r153" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id147">[R153]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
+<tr><td class="label"><a class="fn-backref" href="#id147">[R153]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+of seawater - 2010: Calculation and use of thermodynamic properties.
+Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
+UNESCO (English), 196 pp.  Appendix E.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r154" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id148">[R154]</a></td><td>Unesco, 1983: Algorithms for computation of fundamental properties
 of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</td></tr>
 </tbody>
 </table>
@@ -5618,10 +5501,10 @@ of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r154" rules="none">
+<table class="docutils citation" frame="void" id="r155" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id148">[R154]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id149">[R155]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.  See Appendix A.3.</td></tr>
@@ -5654,7 +5537,7 @@ of the salinometer bath as the two input variables.</p>
 <blockquote>
 <div><p>C(SP,t_68,0)/C(SP=35,t_68,0) [unitless]
 conductivity ratio
-:math:<a href="#id149"><span class="problematic" id="id150">`</span></a>R =</p>
+:math:<a href="#id150"><span class="problematic" id="id151">`</span></a>R =</p>
 </div></blockquote>
 <p><strong>rac{C(S, t_68, 0)}{C(35, 15(IPTS-68),0)} [unitless]</strong></p>
 <blockquote>
@@ -5681,113 +5564,6 @@ conductivity ratio
 </div>
 <div class="section" id="module-gsw.gibbs.steric">
 <span id="gsw-gibbs-steric-module"></span><h2>gsw.gibbs.steric module<a class="headerlink" href="#module-gsw.gibbs.steric" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="gsw.gibbs.steric.steric_height">
-<code class="descclassname">gsw.gibbs.steric.</code><code class="descname">steric_height</code><span class="sig-paren">(</span><em>SA</em>, <em>CT</em>, <em>p</em>, <em>p_ref</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/steric.html#steric_height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.steric.steric_height" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates steric height anomaly as the pressure integral of specific
-volume anomaly from the pressure p of the &#8220;bottle&#8221; to the reference
-pressure p_ref, divided by the constant value of the gravitational
-acceleration, 9.7963 m s^-2.  That is, this function returns the dynamic
-height anomaly divided by 9.7963 m s^-2; this being  the gravitational
-acceleration averaged over the surface of the global ocean (see page 46 of
-Griffies, 2004).  Hence, steric_height is the steric height anomaly with
-respect to a given reference pressure p_ref.</p>
-<p>Dynamic height anomaly is the geostrophic streamfunction for the difference
-between the horizontal velocity at the pressure concerned, p, and the
-horizontal velocity at p_ref.  Dynamic height anomaly is the exact
-geostrophic streamfunction in isobaric surfaces even though the
-gravitational acceleration varies with latitude and pressure.  Steric
-height anomaly, being simply proportional to dynamic height anomaly, is
-also an exact geostrophic streamfunction in an isobaric surface (up to the
-constant of proportionality, 9.7963 m s^-2).</p>
-<p>Note however that steric_height is not exactly the height (in meters) of an
-isobaric surface above a geopotential surface.  It is tempting to divide
-dynamic height anomaly by the local value of the gravitational
-acceleration, but doing so robs the resulting quantity of either being</p>
-<ol class="lowerroman simple">
-<li>an exact geostrophic streamfunction, or</li>
-</ol>
-<p>(ii) exactly the height of an isobaric surface above a geopotential
-surface.</p>
-<p>By using a constant value of the gravitational acceleration, we have
-retained the first of these two properties.  So it should be noted that
-because of the variation of the gravitational acceleration with latitude,
-steric_height does not exactly represent the height of an isobaric surface
-above a geopotential surface under the assumption of geostropy.</p>
-<p>The reference values used for the specific volume anomaly are
-SSO = 35.16504 g/kg and CT = 0 deg C.  This function calculates specific
-volume anomaly using the computationally efficient 48-term expression for
-specific volume of McDougall et al. (2011).  Note that the 48-term equation
-has been fitted in a restricted range of parameter space, and is most
-accurate inside the &#8220;oceanographic funnel&#8221; described in McDougall et al.
-(2011) and IOC et al. (2010).  For dynamical oceanography we may take the
-48-term rational function expression for density as essentially reflecting
-the full accuracy of TEOS-10.  The GSW internal library function
-&#8220;infunnel(SA,CT,p)&#8221; is available to be used if one wants to test if some of
-one&#8217;s data lies outside this &#8220;funnel&#8221;.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>SA</strong> : array_like</p>
-<blockquote>
-<div><p>Absolute salinity [g kg <sup>-1</sup>]</p>
-</div></blockquote>
-<p><strong>CT</strong> : array_like</p>
-<blockquote>
-<div><p>Conservative Temperature [<span class="math">\(^\circ\)</span> C (ITS-90)]</p>
-</div></blockquote>
-<p><strong>p</strong> : array_like</p>
-<blockquote>
-<div><p>pressure [dbar]</p>
-</div></blockquote>
-<p><strong>p_ref</strong> : int, float, optional</p>
-<blockquote>
-<div><p>reference pressure, default = 0</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>steric_height</strong> : array_like</p>
-<blockquote class="last">
-<div><p>dynamic height anomaly divided by 9.7963 m s^-2  [m]</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>If p_ref exceeds the pressure of the deepest &#8220;bottle&#8221; on a vertical
-profile, the steric height anomaly for each &#8220;bottle&#8221; on the whole vertical
-profile is returned as NaN.</p>
-<p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r158" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id151">[R158]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
-of seawater - 2010: Calculation and use of thermodynamic properties.
-Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
-UNESCO (English), 196 pp. See section 3.27.</td></tr>
-</tbody>
-</table>
-<table class="docutils citation" frame="void" id="r159" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id152">[R159]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A
-computationally efficient 48-term expression for the density of seawater
-in terms of Conservative Temperature, and related properties of seawater.</td></tr>
-</tbody>
-</table>
-<table class="docutils citation" frame="void" id="r160" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id153">[R160]</a></td><td>Griffies, S. M., 2004: Fundamentals of Ocean Climate Models.
-Princeton, NJ: Princeton University Press, 518 pp + xxxiv.</td></tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>TODO</p>
-</dd></dl>
-
 </div>
 <div class="section" id="module-gsw.gibbs.thermodynamics_from_t">
 <span id="gsw-gibbs-thermodynamics-from-t-module"></span><h2>gsw.gibbs.thermodynamics_from_t module<a class="headerlink" href="#module-gsw.gibbs.thermodynamics_from_t" title="Permalink to this headline">¶</a></h2>
@@ -5828,10 +5604,10 @@ Note.  The output is in unit of degress Celsius per Pa,
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r161" rules="none">
+<table class="docutils citation" frame="void" id="r159" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id154">[R161]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id152">[R159]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
@@ -5873,10 +5649,10 @@ Note.  The output is in unit of degress Celsius per Pa,
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r162" rules="none">
+<table class="docutils citation" frame="void" id="r160" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id155">[R162]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id153">[R160]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
@@ -5916,10 +5692,10 @@ to Conservative Temperature.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r163" rules="none">
+<table class="docutils citation" frame="void" id="r161" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id156">[R163]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id154">[R161]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (2.18.3).</td></tr>
@@ -5969,10 +5745,10 @@ to potential temperature, with a reference pressure of zero.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r164" rules="none">
+<table class="docutils citation" frame="void" id="r162" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id157">[R164]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id155">[R162]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (2.18.2).</td></tr>
@@ -6022,19 +5798,19 @@ to in situ temperature.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r165" rules="none">
+<table class="docutils citation" frame="void" id="r163" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id158">[R165]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id156">[R163]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (2.18.1)</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r166" rules="none">
+<table class="docutils citation" frame="void" id="r164" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id159">[R166]</a></td><td>McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm
+<tr><td class="label"><a class="fn-backref" href="#id157">[R164]</a></td><td>McDougall, T.J., D.R. Jackett and F.J. Millero, 2010: An algorithm
 for estimating Absolute Salinity in the global ocean. Submitted to Ocean
 Science. A preliminary version is available at Ocean Sci. Discuss.,
 6, 215-242.</td></tr>
@@ -6085,10 +5861,10 @@ at constant Conservative Temperature.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r167" rules="none">
+<table class="docutils citation" frame="void" id="r165" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id160">[R167]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id158">[R165]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (2.19.3)</td></tr>
@@ -6138,10 +5914,10 @@ at constant potential temperature with a reference pressure of 0 dbar.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r168" rules="none">
+<table class="docutils citation" frame="void" id="r166" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id161">[R168]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id159">[R166]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (2.19.2)</td></tr>
@@ -6191,10 +5967,10 @@ at constant in situ temperature.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r169" rules="none">
+<table class="docutils citation" frame="void" id="r167" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id162">[R169]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id160">[R167]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (2.19.1)</td></tr>
@@ -6243,10 +6019,10 @@ UNESCO (English), 196 pp. See Eqn. (2.19.1)</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r170" rules="none">
+<table class="docutils citation" frame="void" id="r168" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id163">[R170]</a></td><td><dl class="first docutils">
+<tr><td class="label"><a class="fn-backref" href="#id161">[R168]</a></td><td><dl class="first docutils">
 <dt>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation</dt>
 <dd>of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</dd>
@@ -6298,10 +6074,10 @@ Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,</dd>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r171" rules="none">
+<table class="docutils citation" frame="void" id="r169" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id164">[R171]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id162">[R169]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 2.9.</td></tr>
@@ -6350,10 +6126,10 @@ UNESCO (English), 196 pp. See section 2.9.</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r172" rules="none">
+<table class="docutils citation" frame="void" id="r170" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id165">[R172]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id163">[R170]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
@@ -6402,10 +6178,10 @@ UNESCO (English), 196 pp.</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r173" rules="none">
+<table class="docutils citation" frame="void" id="r171" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id166">[R173]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id164">[R171]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
@@ -6422,11 +6198,6 @@ UNESCO (English), 196 pp.</td></tr>
 </pre></div>
 </div>
 </dd></dl>
-
-<dl class="function">
-<dt id="gsw.gibbs.thermodynamics_from_t.deltaSA_from_rho_t_exact">
-<code class="descclassname">gsw.gibbs.thermodynamics_from_t.</code><code class="descname">deltaSA_from_rho_t_exact</code><span class="sig-paren">(</span><em>rho</em>, <em>SP</em>, <em>t</em>, <em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsw/gibbs/thermodynamics_from_t.html#deltaSA_from_rho_t_exact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsw.gibbs.thermodynamics_from_t.deltaSA_from_rho_t_exact" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="gsw.gibbs.thermodynamics_from_t.dynamic_enthalpy_t_exact">
@@ -6464,19 +6235,19 @@ IAPWS-09 and IAPWS-08 Gibbs functions, see the TEOS-10 Manual, IOC et al.
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r174" rules="none">
+<table class="docutils citation" frame="void" id="r172" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id167">[R174]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id165">[R172]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r175" rules="none">
+<table class="docutils citation" frame="void" id="r173" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id168">[R175]</a></td><td>Young, W.R., 2010: Dynamic enthalpy, Conservative Temperature, and
+<tr><td class="label"><a class="fn-backref" href="#id166">[R173]</a></td><td>Young, W.R., 2010: Dynamic enthalpy, Conservative Temperature, and
 the seawater. Boussinesq approximation. Journal of Physical
 Oceanography, 40, 394-400.</td></tr>
 </tbody>
@@ -6734,10 +6505,10 @@ The specific internal energy of seawater <span class="math">\(u\)</span> is give
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r180" rules="none">
+<table class="docutils citation" frame="void" id="r178" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id169">[R180]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id167">[R178]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 2.21.</td></tr>
@@ -6940,10 +6711,10 @@ the isentropic or adiabatic change in pressure.</div></blockquote>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r183" rules="none">
+<table class="docutils citation" frame="void" id="r181" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id170">[R183]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id168">[R181]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
@@ -6992,10 +6763,10 @@ UNESCO (English), 196 pp.</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r184" rules="none">
+<table class="docutils citation" frame="void" id="r182" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id171">[R184]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id169">[R182]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 3.41.</td></tr>
@@ -7040,10 +6811,10 @@ UNESCO (English), 196 pp. See section 3.41.</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r185" rules="none">
+<table class="docutils citation" frame="void" id="r183" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id172">[R185]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id170">[R183]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 3.4.</td></tr>
@@ -7096,10 +6867,10 @@ situ temperature.</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r186" rules="none">
+<table class="docutils citation" frame="void" id="r184" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id173">[R186]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id171">[R184]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 2.8.</td></tr>
@@ -7129,7 +6900,7 @@ UNESCO (English), 196 pp. See section 2.8.</td></tr>
 <div>Calculates the Absolute Salinity of a seawater sample, for given values
 of its density, in situ temperature and sea pressure (in dbar).
 One use for this function is in the laboratory where a measured value of
-the in situ density :math:<a href="#id174"><span class="problematic" id="id175">`</span></a></div></blockquote>
+the in situ density :math:<a href="#id172"><span class="problematic" id="id173">`</span></a></div></blockquote>
 <dl class="docutils">
 <dt>ho` of a seawater sample may have been made at</dt>
 <dd>the laboratory temperature <span class="math">\(t\)</span> and at atmospheric pressure <span class="math">\(p\)</span>.
@@ -7213,10 +6984,10 @@ respect to a reference pressure of 0 dbar</p>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r189" rules="none">
+<table class="docutils citation" frame="void" id="r187" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id176">[R189]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id174">[R187]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (3.6.1).</td></tr>
@@ -7245,7 +7016,7 @@ The speed of sound in seawater <span class="math">\(c\)</span> is given by:
 </div>
 </div></blockquote>
 <dl class="docutils">
-<dt>ho <a href="#id177"><span class="problematic" id="id178">|</span></a>_{SA,eta}} =</dt>
+<dt>ho <a href="#id175"><span class="problematic" id="id176">|</span></a>_{SA,eta}} =</dt>
 <dd>sqrt{(</dd>
 <dt>hokappa)^{-1}} =</dt>
 <dd><blockquote class="first">
@@ -7332,10 +7103,10 @@ Conservative Temperature is equal to 0 <span class="math">\(^\circ\)</span> C.</
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r191" rules="none">
+<table class="docutils citation" frame="void" id="r189" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id179">[R191]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id177">[R189]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (3.7.3)</td></tr>
@@ -7384,10 +7155,10 @@ UNESCO (English), 196 pp. See Eqn. (3.7.3)</td></tr>
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r192" rules="none">
+<table class="docutils citation" frame="void" id="r190" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id180">[R192]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id178">[R190]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 2.7.</td></tr>
@@ -7446,10 +7217,10 @@ for a single density.  This program will output both valid solutions
 (t, t_multiple), if there is only one possible solution the second variable
 will be set to NaN.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r193" rules="none">
+<table class="docutils citation" frame="void" id="r191" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id181">[R193]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id179">[R191]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp.</td></tr>
@@ -7489,10 +7260,10 @@ seawater is a maximum, at given Absolute Salinity, SA, and sea pressure, p
 </tbody>
 </table>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r194" rules="none">
+<table class="docutils citation" frame="void" id="r192" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id182">[R194]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id180">[R192]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 3.42.</td></tr>
@@ -7563,19 +7334,19 @@ McDougall et al. (2011).  The GSW library function &#8220;infunnel(SA, CT, p)&#8
 available to be used if one wants to test if some of one&#8217;s data lies
 outside this &#8220;funnel&#8221;.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r195" rules="none">
+<table class="docutils citation" frame="void" id="r193" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id183">[R195]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id181">[R193]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqn. (3.20.5).</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r196" rules="none">
+<table class="docutils citation" frame="void" id="r194" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id184">[R196]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A
+<tr><td class="label"><a class="fn-backref" href="#id182">[R194]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A
 computationally efficient 48-term expression for the density of
 seawater in terms of Conservative Temperature, and related properties
 of seawater.</td></tr>
@@ -7642,19 +7413,19 @@ IOC et al. (2010).  The GSW library function &#8220;infunnel(SA, CT, p)&#8221; i
 available to be used if one wants to test if some of one&#8217;s data lies
 outside this &#8220;funnel&#8221;.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r197" rules="none">
+<table class="docutils citation" frame="void" id="r195" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id185">[R197]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id183">[R195]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See section 3.10 and Eqn. (3.10.2).</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r198" rules="none">
+<table class="docutils citation" frame="void" id="r196" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id186">[R198]</a></td><td>Griffies, S. M., 2004: Fundamentals of Ocean Climate Models.
+<tr><td class="label"><a class="fn-backref" href="#id184">[R196]</a></td><td>Griffies, S. M., 2004: Fundamentals of Ocean Climate Models.
 Princeton, NJ: Princeton University Press, 518 pp + xxxiv.</td></tr>
 </tbody>
 </table>
@@ -7717,19 +7488,19 @@ McDougall et al. (2011).  The GSW library function &#8220;infunnel(SA, CT, p)&#8
 available to be used if one wants to test if some of one&#8217;s data lies
 outside this &#8220;funnel&#8221;.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r199" rules="none">
+<table class="docutils citation" frame="void" id="r197" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id187">[R199]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
+<tr><td class="label"><a class="fn-backref" href="#id185">[R197]</a></td><td>IOC, SCOR and IAPSO, 2010: The international thermodynamic equation
 of seawater - 2010: Calculation and use of thermodynamic properties.
 Intergovernmental Oceanographic Commission, Manuals and Guides No. 56,
 UNESCO (English), 196 pp. See Eqns. (3.15.1) and (3.16.1).</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r200" rules="none">
+<table class="docutils citation" frame="void" id="r198" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id188">[R200]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A
+<tr><td class="label"><a class="fn-backref" href="#id186">[R198]</a></td><td>McDougall T.J., P.M. Barker, R. Feistel and D.R. Jackett, 2011:  A
 computationally efficient 48-term expression for the density of
 seawater in terms of Conservative Temperature, and related properties
 of seawater.</td></tr>
@@ -7811,7 +7582,7 @@ of seawater.</td></tr>
       &copy;2017, Author.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

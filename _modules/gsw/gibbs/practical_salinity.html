@@ -231,7 +231,7 @@
     <span class="k">if</span> <span class="p">(</span><span class="n">SP</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;R_from_SP: SP must be non-negative!&#39;</span><span class="p">)</span>
 
-    <span class="n">SP</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">SP</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Setting up the constants</span>
     <span class="n">t68</span> <span class="o">=</span> <span class="n">t</span> <span class="o">*</span> <span class="mf">1.00024</span>
@@ -492,7 +492,7 @@
 <span class="sd">       of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">C</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">C</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">t68</span> <span class="o">=</span> <span class="n">t</span> <span class="o">*</span> <span class="mf">1.00024</span>
     <span class="n">ft68</span> <span class="o">=</span> <span class="p">(</span><span class="n">t68</span> <span class="o">-</span> <span class="mi">15</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">t68</span> <span class="o">-</span> <span class="mi">15</span><span class="p">))</span>
@@ -586,7 +586,7 @@
 <span class="sd">       of seawater.  Unesco Technical Papers in Marine Science, 44, 53 pp.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">t68</span> <span class="o">=</span> <span class="n">t</span> <span class="o">*</span> <span class="mf">1.00024</span>
     <span class="n">ft68</span> <span class="o">=</span> <span class="p">(</span><span class="n">t68</span> <span class="o">-</span> <span class="mi">15</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">t68</span> <span class="o">-</span> <span class="mi">15</span><span class="p">))</span>
@@ -705,7 +705,7 @@
 <span class="sd">       particular, Eqns. (E.2.1) and (E.2.6).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">Rt</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">Rt</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">Rt</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">Rt</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">t68</span> <span class="o">=</span> <span class="n">t</span> <span class="o">*</span> <span class="mf">1.00024</span>
     <span class="n">ft68</span> <span class="o">=</span> <span class="p">(</span><span class="n">t68</span> <span class="o">-</span> <span class="mi">15</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">t68</span> <span class="o">-</span> <span class="mi">15</span><span class="p">))</span>
@@ -771,7 +771,7 @@
       &copy;2017, Author.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
